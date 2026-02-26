@@ -12,6 +12,10 @@
   </head>
   <body class="antialiased">
     <div id="root"></div>
+    <script>
+      // Polyfill for amazon-cognito-identity-js (needs global + Buffer in browser)
+      if (typeof global === 'undefined') { window.global = window; }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

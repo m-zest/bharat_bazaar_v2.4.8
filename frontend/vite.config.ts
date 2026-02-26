@@ -13,8 +13,10 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: 'https://gxzt8kxcdh.execute-api.ap-south-1.amazonaws.com',
         changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, '/v1/api'),
       },
     },
   },
