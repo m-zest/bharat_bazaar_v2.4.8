@@ -75,4 +75,24 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+
+  getHolidays: (params?: { type?: string; state?: string; month?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.type) query.set('type', params.type);
+    if (params?.state) query.set('state', params.state);
+    if (params?.month) query.set('month', String(params.month));
+    const qs = query.toString();
+    return request<any>(`/holidays${qs ? `?${qs}` : ''}`);
+  },
+
+  getHolidayDetail: (id: string) =>
+    request<any>(`/holidays/${id}`),
+
+  getHolidayRecommendations: (id: string, city?: string, category?: string) => {
+    const query = new URLSearchParams();
+    if (city) query.set('city', city);
+    if (category) query.set('category', category);
+    const qs = query.toString();
+    return request<any>(`/holidays/${id}/recommendations${qs ? `?${qs}` : ''}`);
+  },
 };
