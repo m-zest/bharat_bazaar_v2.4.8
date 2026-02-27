@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { invokeBedrockClaude, parseJSONResponse } from '../utils/bedrock-client';
-import { success, error } from '../utils/response';
+import { invokeBedrockClaude, parseJSONResponse, BedrockThrottleError } from '../utils/bedrock-client';
+import { success, error, throttled } from '../utils/response';
 import { buildDescriptionPrompt } from '../prompts/description-prompt';
 
 export interface DescriptionRequest {
@@ -55,7 +55,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     });
 
     const aiResponse = await invokeBedrockClaude(prompt, {
-      maxTokens: 2000 * body.targetLanguages.length,
+      maxTokens: 1000 * body.targetLanguages.length,
       temperature: 0.6,
       systemPrompt: 'You are BharatBazaar AI Content Generator. Create culturally adapted, multilingual product descriptions for Indian e-commerce. You are fluent in Hindi, Tamil, Bengali, Gujarati, Marathi, and English. Always respond in valid JSON. Write actual text in the target languages, not transliterations.',
     });
@@ -69,6 +69,9 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     });
   } catch (err: any) {
     console.error('Description handler error:', err);
+    if (err instanceof BedrockThrottleError) {
+      return throttled(err.message, Math.round(err.retryAfterMs / 1000));
+    }
     return error(500, err.message || 'Internal server error');
   }
 }

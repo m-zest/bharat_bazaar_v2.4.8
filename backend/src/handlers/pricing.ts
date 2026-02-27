@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { invokeBedrockClaude, parseJSONResponse } from '../utils/bedrock-client';
-import { success, error } from '../utils/response';
+import { invokeBedrockClaude, parseJSONResponse, BedrockThrottleError } from '../utils/bedrock-client';
+import { success, error, throttled } from '../utils/response';
 import { buildPricingPrompt } from '../prompts/pricing-prompt';
 import { REGIONAL_DATA, getUpcomingFestivals } from '../data/regional-data';
 import { COMPETITOR_PRICES } from '../data/sample-data';
@@ -69,7 +69,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     });
 
     const aiResponse = await invokeBedrockClaude(prompt, {
-      maxTokens: 3000,
+      maxTokens: 1500,
       temperature: 0.4,
       systemPrompt: 'You are BharatBazaar AI Pricing Engine. Analyze Indian retail markets and provide pricing strategies. Always respond in valid JSON format. All prices must be in Indian Rupees (₹).',
     });
@@ -85,6 +85,9 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     });
   } catch (err: any) {
     console.error('Pricing handler error:', err);
+    if (err instanceof BedrockThrottleError) {
+      return throttled(err.message, Math.round(err.retryAfterMs / 1000));
+    }
     return error(500, err.message || 'Internal server error');
   }
 }

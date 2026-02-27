@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { invokeBedrockClaude, parseJSONResponse } from '../utils/bedrock-client';
-import { success, error } from '../utils/response';
+import { invokeBedrockClaude, parseJSONResponse, BedrockThrottleError } from '../utils/bedrock-client';
+import { success, error, throttled } from '../utils/response';
 import { buildSentimentPrompt } from '../prompts/sentiment-prompt';
 import { DEMO_REVIEWS } from '../data/sample-data';
 
@@ -74,7 +74,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     });
 
     const aiResponse = await invokeBedrockClaude(prompt, {
-      maxTokens: 4000,
+      maxTokens: 1500,
       temperature: 0.2,
       systemPrompt: 'You are BharatBazaar AI Sentiment Analyzer. You are an expert at understanding Indian consumer reviews in Hindi, English, Hinglish (code-mixed), and other Indian languages. You detect nuanced sentiment including sarcasm, regional expressions, and cultural context. Always respond in valid JSON.',
     });
@@ -89,6 +89,9 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     });
   } catch (err: any) {
     console.error('Sentiment handler error:', err);
+    if (err instanceof BedrockThrottleError) {
+      return throttled(err.message, Math.round(err.retryAfterMs / 1000));
+    }
     return error(500, err.message || 'Internal server error');
   }
 }
