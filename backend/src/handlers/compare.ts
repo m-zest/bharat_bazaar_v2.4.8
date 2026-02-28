@@ -3,18 +3,18 @@ import { success, error, throttled } from '../utils/response';
 import { invokeBedrockClaude, parseJSONResponse, BedrockThrottleError } from '../utils/bedrock-client';
 import { COMPETITOR_PRICES } from '../data/sample-data';
 import { REGIONAL_DATA } from '../data/regional-data';
+import { getDemoCompareResponse } from './demo-fallback';
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  const body = JSON.parse(event.body || '{}');
+  const { products, city } = body;
+  const cityName = city || 'Lucknow';
   try {
-    const body = JSON.parse(event.body || '{}');
-    const { products, city } = body;
-
     if (!products || !Array.isArray(products) || products.length < 2) {
       return error(400, 'Provide at least 2 products to compare', 'INVALID_REQUEST');
     }
 
-    const cityData = REGIONAL_DATA[city || 'Lucknow'];
-    const cityName = city || 'Lucknow';
+    const cityData = REGIONAL_DATA[cityName];
 
     // Build product context with competitor data
     const productDetails = products.map((p: any) => {
@@ -76,12 +76,9 @@ Base your analysis on the competitor prices provided, the city's purchasing powe
 
     const result = parseJSONResponse<any>(response);
 
-    return success(result);
+    return success({ ...result, demoMode: false });
   } catch (err: any) {
-    if (err instanceof BedrockThrottleError) {
-      return throttled(err.message, Math.round(err.retryAfterMs / 1000));
-    }
-    console.error('Compare handler error:', err);
-    return error(500, err.message || 'Failed to compare products');
+    console.error('Compare handler error, using demo fallback:', err.message);
+    return getDemoCompareResponse(products, cityName);
   }
 }

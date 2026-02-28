@@ -2,6 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { invokeBedrockClaude, parseJSONResponse, BedrockThrottleError } from '../utils/bedrock-client';
 import { success, error, throttled } from '../utils/response';
 import { buildDescriptionPrompt } from '../prompts/description-prompt';
+import { getDemoContentResponse } from './demo-fallback';
 
 export interface DescriptionRequest {
   productName: string;
@@ -32,8 +33,8 @@ export interface DescriptionResponse {
 const VALID_LANGUAGES = ['en', 'hi', 'ta', 'bn', 'gu', 'mr'];
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  const body: DescriptionRequest = JSON.parse(event.body || '{}');
   try {
-    const body: DescriptionRequest = JSON.parse(event.body || '{}');
 
     if (!body.productName || !body.category || !body.features?.length || !body.targetLanguages?.length) {
       return error(400, 'Missing required fields: productName, category, features, targetLanguages', 'INVALID_REQUEST');
@@ -66,12 +67,10 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       ...result,
       productName: body.productName,
       generatedAt: new Date().toISOString(),
+      demoMode: false,
     });
   } catch (err: any) {
-    console.error('Description handler error:', err);
-    if (err instanceof BedrockThrottleError) {
-      return throttled(err.message, Math.round(err.retryAfterMs / 1000));
-    }
-    return error(500, err.message || 'Internal server error');
+    console.error('Description handler error, using demo fallback:', err.message);
+    return getDemoContentResponse(body.productName, body.targetLanguages, '', body.category);
   }
 }

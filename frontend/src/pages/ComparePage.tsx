@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from 'recharts'
 import { GitCompare, Check, TrendingUp, TrendingDown, Sparkles, Loader2 } from 'lucide-react'
 import { api } from '../utils/api'
+import DemoModeBadge from '../components/DemoModeBadge'
 
 const PRODUCTS = [
   { id: 'demo-1', name: 'Premium Basmati Rice 5kg', category: 'Groceries', costPrice: 320, currentPrice: 449 },
@@ -114,7 +115,9 @@ export default function ComparePage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">{error}</div>
+        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-xl text-sm mb-6">
+          AI features temporarily limited. Our servers are experiencing high demand. Please try again in a few minutes.
+        </div>
       )}
 
       {loading && (
@@ -293,6 +296,7 @@ export default function ComparePage() {
           </motion.div>
         </AnimatePresence>
       )}
+      <DemoModeBadge visible={!!result?.demoMode} />
     </div>
   )
 }

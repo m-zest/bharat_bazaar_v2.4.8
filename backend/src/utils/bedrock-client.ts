@@ -1,12 +1,23 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 
-const client = new BedrockRuntimeClient({
+// Primary client (ap-south-1)
+const primaryClient = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || 'ap-south-1',
 });
 
-// Haiku has much higher default rate limits and is faster
-// Switch to Sonnet via env var if you have quota: BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
+// Fallback client (us-east-1) for cross-region attempts
+const usEastClient = new BedrockRuntimeClient({
+  region: 'us-east-1',
+});
+
 const MODEL_ID = process.env.BEDROCK_MODEL_ID || 'anthropic.claude-3-haiku-20240307-v1:0';
+
+// Fallback model chain — tried in order
+const MODEL_CHAIN = [
+  { client: primaryClient, modelId: MODEL_ID, label: 'ap-south-1/Haiku' },
+  { client: usEastClient, modelId: 'us.anthropic.claude-3-haiku-20240307-v1:0', label: 'us-east-1/Haiku-cross-region' },
+  { client: usEastClient, modelId: 'amazon.nova-lite-v1:0', label: 'us-east-1/Nova-Lite', isNova: true },
+];
 
 export interface BedrockOptions {
   maxTokens?: number;
@@ -23,7 +34,6 @@ export class BedrockThrottleError extends Error {
     super(message);
     this.name = 'BedrockThrottleError';
     this.isDailyQuota = isDailyQuota;
-    // Daily quota: suggest waiting longer; burst limit: shorter wait
     this.retryAfterMs = isDailyQuota ? 3600000 : 60000;
   }
 }
@@ -45,6 +55,59 @@ function isDailyQuotaError(err: any): boolean {
     err.message?.includes('quota');
 }
 
+function isAccessError(err: any): boolean {
+  return err.name === 'AccessDeniedException' ||
+    err.name === 'ValidationException' ||
+    err.message?.includes('no access') ||
+    err.message?.includes('not authorized') ||
+    err.message?.includes('is not supported') ||
+    err.$metadata?.httpStatusCode === 403;
+}
+
+async function tryInvoke(
+  bedrockClient: BedrockRuntimeClient,
+  modelId: string,
+  body: string,
+  label: string,
+  isNova?: boolean,
+): Promise<string> {
+  let requestBody: string;
+
+  if (isNova) {
+    // Amazon Nova uses a different request format
+    const parsed = JSON.parse(body);
+    requestBody = JSON.stringify({
+      inferenceConfig: {
+        max_new_tokens: parsed.max_tokens,
+        temperature: parsed.temperature,
+      },
+      messages: [
+        {
+          role: 'user',
+          content: [{ text: `${parsed.system}\n\n${parsed.messages[0].content}` }],
+        },
+      ],
+    });
+  } else {
+    requestBody = body;
+  }
+
+  const command = new InvokeModelCommand({
+    modelId,
+    contentType: 'application/json',
+    accept: 'application/json',
+    body: new TextEncoder().encode(requestBody),
+  });
+
+  const response = await bedrockClient.send(command);
+  const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+
+  if (isNova) {
+    return responseBody.output?.message?.content?.[0]?.text || JSON.stringify(responseBody);
+  }
+  return responseBody.content[0].text;
+}
+
 export async function invokeBedrockClaude(
   prompt: string,
   options: BedrockOptions = {}
@@ -64,53 +127,52 @@ export async function invokeBedrockClaude(
     ],
   });
 
-  const command = new InvokeModelCommand({
-    modelId: MODEL_ID,
-    contentType: 'application/json',
-    accept: 'application/json',
-    body: new TextEncoder().encode(body),
-  });
-
-  // Retry with exponential backoff for burst rate limiting only
-  // Daily quota errors are NOT retried (retrying wastes time and Vercel function timeout)
-  const maxRetries = 3;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await client.send(command);
-      const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-      return responseBody.content[0].text;
-    } catch (err: any) {
-      if (isThrottleError(err)) {
-        const dailyQuota = isDailyQuotaError(err);
-
-        // Don't retry daily quota limits — retrying won't help and wastes Vercel timeout budget
-        if (dailyQuota) {
-          console.error(`Bedrock daily quota exceeded: ${err.message}`);
-          throw new BedrockThrottleError(
-            'AI service daily limit reached. Please try again tomorrow or contact support.',
-            true
-          );
+  // Try each model in the chain
+  for (const { client: bedrockClient, modelId, label, isNova } of MODEL_CHAIN) {
+    // Retry with exponential backoff for burst rate limiting
+    const maxRetries = 2;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Trying ${label} (attempt ${attempt + 1})`);
+        const result = await tryInvoke(bedrockClient, modelId, body, label, isNova);
+        console.log(`Success with ${label}`);
+        return result;
+      } catch (err: any) {
+        // Access denied or model not available — skip to next model
+        if (isAccessError(err)) {
+          console.log(`${label}: Access denied or not available, trying next model...`);
+          break; // Move to next model in chain
         }
 
-        // Burst rate limit — retry with backoff
-        if (attempt < maxRetries) {
-          const delay = Math.pow(2, attempt + 1) * 1000; // 2s, 4s, 8s
-          console.log(`Bedrock throttled (burst), retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
-          await sleep(delay);
-          continue;
+        if (isThrottleError(err)) {
+          const dailyQuota = isDailyQuotaError(err);
+          if (dailyQuota) {
+            console.log(`${label}: Daily quota exceeded, trying next model...`);
+            break; // Move to next model in chain
+          }
+
+          // Burst rate limit — retry with backoff
+          if (attempt < maxRetries) {
+            const delay = Math.pow(2, attempt + 1) * 1000;
+            console.log(`${label}: Throttled (burst), retrying in ${delay}ms`);
+            await sleep(delay);
+            continue;
+          }
+
+          // Exhausted retries — try next model
+          console.log(`${label}: Exhausted retries, trying next model...`);
+          break;
         }
 
-        // Exhausted retries on burst limit
-        throw new BedrockThrottleError(
-          'AI service is temporarily busy. Please try again in a minute.',
-          false
-        );
+        // Other error — try next model
+        console.log(`${label}: Error ${err.message}, trying next model...`);
+        break;
       }
-      throw err;
     }
   }
 
-  throw new Error('Max retries exceeded');
+  // All models failed — throw so handler catches and uses demo fallback
+  throw new Error('All Bedrock models unavailable — demo fallback will be used');
 }
 
 export function parseJSONResponse<T>(text: string): T {

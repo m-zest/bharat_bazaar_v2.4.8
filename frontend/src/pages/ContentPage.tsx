@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Languages, Copy, Check, RotateCcw, Zap, ChevronDown, ChevronUp, Search, Share2 } from 'lucide-react'
 import { api } from '../utils/api'
 import { ScrollReveal } from '../components/AnimatedComponents'
+import DemoModeBadge from '../components/DemoModeBadge'
 
 const DEMO_PRODUCTS = [
   {
@@ -211,7 +212,9 @@ export default function ContentPage() {
           </motion.button>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+              AI features temporarily limited. Our servers are experiencing high demand. Please try again in a few minutes.
+            </div>
           )}
         </form>
 
@@ -358,6 +361,7 @@ export default function ContentPage() {
           </AnimatePresence>
         </div>
       </div>
+      <DemoModeBadge visible={!!result?.demoMode} />
     </div>
   )
 }

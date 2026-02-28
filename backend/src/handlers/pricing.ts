@@ -4,6 +4,7 @@ import { success, error, throttled } from '../utils/response';
 import { buildPricingPrompt } from '../prompts/pricing-prompt';
 import { REGIONAL_DATA, getUpcomingFestivals } from '../data/regional-data';
 import { COMPETITOR_PRICES } from '../data/sample-data';
+import { getDemoPricingResponse } from './demo-fallback';
 
 export interface PricingRequest {
   productName: string;
@@ -35,8 +36,8 @@ export interface PricingResponse {
 }
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  const body: PricingRequest = JSON.parse(event.body || '{}');
   try {
-    const body: PricingRequest = JSON.parse(event.body || '{}');
 
     if (!body.productName || !body.category || !body.costPrice || !body.city) {
       return error(400, 'Missing required fields: productName, category, costPrice, city', 'INVALID_REQUEST');
@@ -82,12 +83,10 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       city: body.city,
       region: regionData.tier,
       generatedAt: new Date().toISOString(),
+      demoMode: false,
     });
   } catch (err: any) {
-    console.error('Pricing handler error:', err);
-    if (err instanceof BedrockThrottleError) {
-      return throttled(err.message, Math.round(err.retryAfterMs / 1000));
-    }
-    return error(500, err.message || 'Internal server error');
+    console.error('Pricing handler error, using demo fallback:', err.message);
+    return getDemoPricingResponse(body.productName, body.category, body.costPrice, body.city);
   }
 }

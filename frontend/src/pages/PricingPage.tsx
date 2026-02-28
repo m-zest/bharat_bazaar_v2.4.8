@@ -4,6 +4,7 @@ import { IndianRupee, TrendingUp, TrendingDown, Minus, Sparkles, RotateCcw, Zap,
 import { jsPDF } from 'jspdf'
 import { api } from '../utils/api'
 import { ScrollReveal } from '../components/AnimatedComponents'
+import DemoModeBadge from '../components/DemoModeBadge'
 
 const DEMO_PRODUCTS = [
   { name: 'Premium Basmati Rice 5kg', category: 'Groceries', costPrice: 320, currentPrice: 449 },
@@ -302,8 +303,8 @@ export default function PricingPage() {
           </motion.button>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
-              {error}
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+              AI features temporarily limited. Our servers are experiencing high demand. Please try again in a few minutes.
             </div>
           )}
         </form>
@@ -470,6 +471,7 @@ export default function PricingPage() {
           </AnimatePresence>
         </div>
       </div>
+      <DemoModeBadge visible={!!result?.demoMode} />
     </div>
   )
 }
