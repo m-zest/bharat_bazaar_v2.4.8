@@ -5,6 +5,7 @@ import { jsPDF } from 'jspdf'
 import { api } from '../utils/api'
 import { ScrollReveal } from '../components/AnimatedComponents'
 import DemoModeBadge from '../components/DemoModeBadge'
+import { useToast } from '../components/Toast'
 
 const DEMO_PRODUCTS = [
   { name: 'Premium Basmati Rice 5kg', category: 'Groceries', costPrice: 320, currentPrice: 449 },
@@ -27,6 +28,7 @@ const strategyGradients: Record<string, { gradient: string; glow: string; badge:
 }
 
 export default function PricingPage() {
+  const { toast } = useToast()
   const [productName, setProductName] = useState('')
   const [category, setCategory] = useState('Groceries')
   const [costPrice, setCostPrice] = useState('')
@@ -59,8 +61,11 @@ export default function PricingPage() {
         city,
       })
       setResult(data)
+      if (data.demoMode) toast('info', 'AI demo mode — smart fallback data')
+      else toast('success', 'Pricing strategies generated!')
     } catch (err: any) {
       setError(err.message || 'Failed to analyze pricing')
+      toast('error', 'AI temporarily unavailable. Try again shortly.')
     } finally {
       setLoading(false)
     }

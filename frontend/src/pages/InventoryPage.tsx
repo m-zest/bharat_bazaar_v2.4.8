@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Package, Plus, Trash2, AlertTriangle, TrendingDown, ShoppingCart, Edit2, Check, X, RefreshCw, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '../utils/api'
+import { useToast } from '../components/Toast'
 
 interface InventoryItem {
   id: string
@@ -17,6 +18,7 @@ interface InventoryItem {
 }
 
 export default function InventoryPage() {
+  const { toast } = useToast()
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -62,8 +64,10 @@ export default function InventoryPage() {
       setInventory(prev => [...prev, item])
       setNewItem({ name: '', category: 'Groceries', costPrice: '', sellingPrice: '', quantity: '', dailySellRate: '', reorderLevel: '' })
       setShowAddForm(false)
+      toast('success', `${item.name} added to inventory!`)
     } catch (err: any) {
       setError(err.message || 'Failed to add item')
+      toast('error', 'Failed to add item')
     } finally {
       setSaving(false)
     }
@@ -74,8 +78,10 @@ export default function InventoryPage() {
       setSaving(true)
       await api.deleteInventoryItem({ itemId: id })
       setInventory(prev => prev.filter(item => item.id !== id))
+      toast('success', 'Item removed from inventory')
     } catch (err: any) {
       setError(err.message || 'Failed to delete item')
+      toast('error', 'Failed to delete item')
     } finally {
       setSaving(false)
     }
@@ -89,8 +95,10 @@ export default function InventoryPage() {
         item.id === id ? { ...item, quantity: Number(editQuantity), lastUpdated: new Date().toISOString() } : item
       ))
       setEditingId(null)
+      toast('success', 'Quantity updated!')
     } catch (err: any) {
       setError(err.message || 'Failed to update quantity')
+      toast('error', 'Failed to update quantity')
     } finally {
       setSaving(false)
     }
