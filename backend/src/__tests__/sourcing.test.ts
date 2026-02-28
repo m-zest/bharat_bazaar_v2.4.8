@@ -52,7 +52,7 @@ describe('Order handler', () => {
   it('places an order successfully', async () => {
     const result = await orderHandler(postEvent({
       productName: 'Premium Basmati Rice 5kg',
-      wholesalerId: 'lko-ws-1',
+      wholesalerId: 'w-lko-1',
       quantity: 10,
       city: 'Lucknow',
     }));

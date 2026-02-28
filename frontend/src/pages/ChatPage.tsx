@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, Send, RotateCcw, User, Bot, Mic, MicOff, Lightbulb, Sparkles } from 'lucide-react'
 import { api } from '../utils/api'
+import DemoModeBadge from '../components/DemoModeBadge'
 
 interface Message {
   id: string
@@ -31,6 +32,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [city] = useState('Lucknow')
+  const [demoMode, setDemoMode] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [voiceSupported] = useState(() =>
     typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
@@ -68,6 +70,8 @@ export default function ChatPage() {
         city,
         conversationHistory: history,
       })
+
+      if (result.demoMode) setDemoMode(true)
 
       const aiMsg: Message = {
         id: `ai-${Date.now()}`,
@@ -319,6 +323,7 @@ export default function ChatPage() {
           Powered by Amazon Bedrock (Claude AI) — {voiceSupported ? 'Tap mic to speak in Hindi' : 'Your business data stays private'}
         </p>
       </div>
+      <DemoModeBadge visible={demoMode} />
     </div>
   )
 }

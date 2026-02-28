@@ -63,19 +63,25 @@ describe('Pricing handler', () => {
     expect(parseBody(result).error.message).toContain('Unsupported city');
   });
 
-  it('handles Bedrock throttle error with 429', async () => {
+  it('falls back to demo mode on Bedrock throttle error', async () => {
     mockInvoke.mockRejectedValue(new BedrockThrottleError('Too busy', false));
 
     const result = await handler(postEvent(VALID_REQUEST));
-    expect(result.statusCode).toBe(429);
-    expect(parseBody(result).error.code).toBe('RATE_LIMITED');
+    expect(result.statusCode).toBe(200);
+    const body = parseBody(result);
+    expect(body.success).toBe(true);
+    expect(body.data.demoMode).toBe(true);
+    expect(body.data.recommendations).toBeDefined();
   });
 
-  it('handles generic errors with 500', async () => {
+  it('falls back to demo mode on generic errors', async () => {
     mockInvoke.mockRejectedValue(new Error('Network fail'));
 
     const result = await handler(postEvent(VALID_REQUEST));
-    expect(result.statusCode).toBe(500);
+    expect(result.statusCode).toBe(200);
+    const body = parseBody(result);
+    expect(body.success).toBe(true);
+    expect(body.data.demoMode).toBe(true);
   });
 
   it('accepts optional currentPrice', async () => {

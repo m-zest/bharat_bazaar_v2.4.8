@@ -4,6 +4,7 @@ import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, 
 import { MessageSquareText, RotateCcw, Zap, ThumbsUp, ThumbsDown, Minus, AlertTriangle, CheckCircle2, Lightbulb, Globe } from 'lucide-react'
 import { api } from '../utils/api'
 import { ScrollReveal } from '../components/AnimatedComponents'
+import DemoModeBadge from '../components/DemoModeBadge'
 
 const SAMPLE_REVIEWS = [
   'Product accha hai but delivery bahut slow thi. 5 din lag gaye aane mein.',
@@ -164,7 +165,9 @@ export default function SentimentPage() {
             </motion.button>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+                AI features temporarily limited. Our servers are experiencing high demand. Please try again in a few minutes.
+              </div>
             )}
           </div>
 
@@ -401,6 +404,7 @@ export default function SentimentPage() {
           </AnimatePresence>
         </div>
       </div>
+      <DemoModeBadge visible={!!result?.demoMode} />
     </div>
   )
 }

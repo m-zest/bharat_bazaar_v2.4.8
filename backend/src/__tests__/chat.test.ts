@@ -60,9 +60,13 @@ describe('Chat handler', () => {
     expect(prompt).toContain('Tell me about products');
   });
 
-  it('handles throttle error', async () => {
+  it('falls back to demo mode on throttle error', async () => {
     mockInvoke.mockRejectedValue(new BedrockThrottleError('Rate limited', false));
     const result = await handler(postEvent({ message: 'test' }));
-    expect(result.statusCode).toBe(429);
+    expect(result.statusCode).toBe(200);
+    const body = parseBody(result);
+    expect(body.success).toBe(true);
+    expect(body.data.demoMode).toBe(true);
+    expect(body.data.response).toBeDefined();
   });
 });
