@@ -1,4 +1,5 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
+import { callGemini } from './gemini-client';
 
 // Primary client (ap-south-1)
 const primaryClient = new BedrockRuntimeClient({
@@ -12,7 +13,7 @@ const usEastClient = new BedrockRuntimeClient({
 
 const MODEL_ID = process.env.BEDROCK_MODEL_ID || 'anthropic.claude-3-haiku-20240307-v1:0';
 
-// Fallback model chain — tried in order
+// Fallback model chain — tried in order (only used if Gemini unavailable)
 const MODEL_CHAIN = [
   { client: primaryClient, modelId: MODEL_ID, label: 'ap-south-1/Haiku' },
   { client: usEastClient, modelId: 'us.anthropic.claude-3-haiku-20240307-v1:0', label: 'us-east-1/Haiku-cross-region' },
@@ -114,6 +115,22 @@ export async function invokeBedrockClaude(
 ): Promise<string> {
   const { maxTokens = 2000, temperature = 0.3, systemPrompt } = options;
 
+  // --- 1. Try Gemini first (primary path during hackathon) ---
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const fullPrompt = systemPrompt
+        ? `${systemPrompt}\n\n${prompt}`
+        : prompt;
+      console.log('Trying Gemini 1.5 Flash (primary)');
+      const result = await callGemini(fullPrompt, { temperature, maxOutputTokens: maxTokens });
+      console.log('Success with Gemini 1.5 Flash');
+      return result;
+    } catch (err: any) {
+      console.error('Gemini failed, falling back to Bedrock:', err.message);
+    }
+  }
+
+  // --- 2. Fallback: try Bedrock model chain ---
   const body = JSON.stringify({
     anthropic_version: 'bedrock-2023-05-31',
     max_tokens: maxTokens,
@@ -127,9 +144,7 @@ export async function invokeBedrockClaude(
     ],
   });
 
-  // Try each model in the chain
   for (const { client: bedrockClient, modelId, label, isNova } of MODEL_CHAIN) {
-    // Retry with exponential backoff for burst rate limiting
     const maxRetries = 2;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
@@ -138,20 +153,18 @@ export async function invokeBedrockClaude(
         console.log(`Success with ${label}`);
         return result;
       } catch (err: any) {
-        // Access denied or model not available — skip to next model
         if (isAccessError(err)) {
           console.log(`${label}: Access denied or not available, trying next model...`);
-          break; // Move to next model in chain
+          break;
         }
 
         if (isThrottleError(err)) {
           const dailyQuota = isDailyQuotaError(err);
           if (dailyQuota) {
             console.log(`${label}: Daily quota exceeded, trying next model...`);
-            break; // Move to next model in chain
+            break;
           }
 
-          // Burst rate limit — retry with backoff
           if (attempt < maxRetries) {
             const delay = Math.pow(2, attempt + 1) * 1000;
             console.log(`${label}: Throttled (burst), retrying in ${delay}ms`);
@@ -159,12 +172,10 @@ export async function invokeBedrockClaude(
             continue;
           }
 
-          // Exhausted retries — try next model
           console.log(`${label}: Exhausted retries, trying next model...`);
           break;
         }
 
-        // Other error — try next model
         console.log(`${label}: Error ${err.message}, trying next model...`);
         break;
       }
@@ -172,14 +183,23 @@ export async function invokeBedrockClaude(
   }
 
   // All models failed — throw so handler catches and uses demo fallback
-  throw new Error('All Bedrock models unavailable — demo fallback will be used');
+  throw new Error('All AI models unavailable (Gemini + Bedrock) — demo fallback will be used');
+}
+
+/** Strip ```json ... ``` wrappers that Gemini sometimes adds around JSON */
+export function cleanJsonResponse(text: string): string {
+  return text
+    .replace(/```json\n?/g, '')
+    .replace(/```\n?/g, '')
+    .trim();
 }
 
 export function parseJSONResponse<T>(text: string): T {
+  const cleaned = cleanJsonResponse(text);
   // Try to extract JSON from the response (handle markdown code blocks)
-  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/(\{[\s\S]*\})/);
+  const jsonMatch = cleaned.match(/(\{[\s\S]*\})/);
   if (jsonMatch) {
     return JSON.parse(jsonMatch[1].trim());
   }
-  return JSON.parse(text);
+  return JSON.parse(cleaned);
 }
