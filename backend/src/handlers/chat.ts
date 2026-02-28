@@ -3,18 +3,18 @@ import { invokeBedrockClaude, BedrockThrottleError } from '../utils/bedrock-clie
 import { success, error, throttled } from '../utils/response';
 import { REGIONAL_DATA, getUpcomingFestivals } from '../data/regional-data';
 import { WHOLESALE_PRODUCTS, getWholesalersForCity } from '../data/wholesale-data';
+import { getDemoChatResponse } from './demo-fallback';
 import { DEMO_PRODUCTS, COMPETITOR_PRICES } from '../data/sample-data';
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  const body = JSON.parse(event.body || '{}');
+  const { message, city, conversationHistory } = body;
+  const currentCity = city || 'Lucknow';
   try {
-    const body = JSON.parse(event.body || '{}');
-    const { message, city, conversationHistory } = body;
-
     if (!message) {
       return error(400, 'Missing required field: message', 'INVALID_REQUEST');
     }
 
-    const currentCity = city || 'Lucknow';
     const regionData = REGIONAL_DATA[currentCity];
     const festivals = getUpcomingFestivals(currentCity, 3);
     const wholesalers = getWholesalersForCity(currentCity);
@@ -96,12 +96,10 @@ IMPORTANT RULES:
       response: aiResponse,
       city: currentCity,
       timestamp: new Date().toISOString(),
+      demoMode: false,
     });
   } catch (err: any) {
-    console.error('Chat handler error:', err);
-    if (err instanceof BedrockThrottleError) {
-      return throttled(err.message, Math.round(err.retryAfterMs / 1000));
-    }
-    return error(500, err.message || 'Internal server error');
+    console.error('Chat handler error, using demo fallback:', err.message);
+    return getDemoChatResponse(message, currentCity);
   }
 }

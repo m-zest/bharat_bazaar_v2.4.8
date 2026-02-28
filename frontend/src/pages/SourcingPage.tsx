@@ -3,11 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Package, Search, MapPin, Star, Truck, ShieldCheck, ArrowRight, Check, IndianRupee } from 'lucide-react'
 import { api } from '../utils/api'
 import { ScrollReveal } from '../components/AnimatedComponents'
+import { useToast } from '../components/Toast'
 
 const CATEGORIES = ['All', 'Groceries', 'Fashion', 'Electronics', 'Beauty & Personal Care', 'Home & Kitchen']
 const CITIES = ['Lucknow', 'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 'Ahmedabad', 'Pune', 'Jaipur', 'Indore']
 
 export default function SourcingPage() {
+  const { toast } = useToast()
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [city, setCity] = useState('Lucknow')
@@ -50,8 +52,10 @@ export default function SourcingPage() {
         city,
       })
       setOrderSuccess(result)
+      toast('success', `Order confirmed! ID: ${result.orderId}`)
     } catch (err) {
       console.error('Order error:', err)
+      toast('error', 'Order failed. Try again.')
     } finally {
       setOrdering(false)
     }
@@ -137,7 +141,7 @@ export default function SourcingPage() {
             onClick={() => setSelectedCategory(cat)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               selectedCategory === cat
-                ? 'bg-[#1E1B4B] text-white shadow-lg'
+                ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25'
                 : 'bg-white border border-gray-200 text-gray-600 hover:border-bazaar-300 hover:text-bazaar-600'
             }`}
           >
@@ -256,7 +260,7 @@ export default function SourcingPage() {
                     disabled={!product.inStock}
                     className={`text-sm px-4 py-2 rounded-xl font-medium transition-all flex items-center gap-1 ${
                       product.inStock
-                        ? 'bg-[#1E1B4B] text-white hover:bg-[#312e81] shadow-sm'
+                        ? 'bg-orange-500 text-white hover:bg-orange-600 shadow-sm shadow-orange-500/25'
                         : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     }`}
                   >

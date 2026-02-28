@@ -4,6 +4,8 @@ import { IndianRupee, TrendingUp, TrendingDown, Minus, Sparkles, RotateCcw, Zap,
 import { jsPDF } from 'jspdf'
 import { api } from '../utils/api'
 import { ScrollReveal } from '../components/AnimatedComponents'
+import DemoModeBadge from '../components/DemoModeBadge'
+import { useToast } from '../components/Toast'
 
 const DEMO_PRODUCTS = [
   { name: 'Premium Basmati Rice 5kg', category: 'Groceries', costPrice: 320, currentPrice: 449 },
@@ -26,6 +28,7 @@ const strategyGradients: Record<string, { gradient: string; glow: string; badge:
 }
 
 export default function PricingPage() {
+  const { toast } = useToast()
   const [productName, setProductName] = useState('')
   const [category, setCategory] = useState('Groceries')
   const [costPrice, setCostPrice] = useState('')
@@ -58,8 +61,11 @@ export default function PricingPage() {
         city,
       })
       setResult(data)
+      if (data.demoMode) toast('info', 'AI demo mode — smart fallback data')
+      else toast('success', 'Pricing strategies generated!')
     } catch (err: any) {
       setError(err.message || 'Failed to analyze pricing')
+      toast('error', 'AI temporarily unavailable. Try again shortly.')
     } finally {
       setLoading(false)
     }
@@ -302,8 +308,8 @@ export default function PricingPage() {
           </motion.button>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
-              {error}
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+              AI features temporarily limited. Our servers are experiencing high demand. Please try again in a few minutes.
             </div>
           )}
         </form>
@@ -470,6 +476,7 @@ export default function PricingPage() {
           </AnimatePresence>
         </div>
       </div>
+      <DemoModeBadge visible={!!result?.demoMode} />
     </div>
   )
 }

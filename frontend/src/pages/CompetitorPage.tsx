@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Eye, TrendingUp, TrendingDown, Minus, AlertTriangle, Bell, Sparkles, Loader2 } from 'lucide-react'
 import { api } from '../utils/api'
+import DemoModeBadge from '../components/DemoModeBadge'
+import { useToast } from '../components/Toast'
 
 const PRODUCTS_TO_MONITOR = [
   { name: 'Premium Basmati Rice 5kg', category: 'Groceries', yourPrice: 449, costPrice: 320 },
@@ -10,6 +12,7 @@ const PRODUCTS_TO_MONITOR = [
 ]
 
 export default function CompetitorPage() {
+  const { toast } = useToast()
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -22,8 +25,11 @@ export default function CompetitorPage() {
       const data = await api.analyzeCompetitors({ products: PRODUCTS_TO_MONITOR, city: 'Lucknow' })
       setResult(data)
       if (data.products?.length > 0) setExpandedProduct(data.products[0].name)
+      if (data.demoMode) toast('info', 'AI demo mode — smart fallback data')
+      else toast('success', `${data.products?.length || 0} products analyzed!`)
     } catch (err: any) {
       setError(err.message || 'AI analysis failed. Try again.')
+      toast('error', 'AI temporarily unavailable. Try again shortly.')
     } finally {
       setLoading(false)
     }
@@ -61,7 +67,9 @@ export default function CompetitorPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">{error}</div>
+        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-xl text-sm mb-6">
+          AI features temporarily limited. Our servers are experiencing high demand. Please try again in a few minutes.
+        </div>
       )}
 
       {loading && (
@@ -271,6 +279,7 @@ export default function CompetitorPage() {
           </div>
         </>
       )}
+      <DemoModeBadge visible={!!result?.demoMode} />
     </div>
   )
 }

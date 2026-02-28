@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from 'recharts'
 import { GitCompare, Check, TrendingUp, TrendingDown, Sparkles, Loader2 } from 'lucide-react'
 import { api } from '../utils/api'
+import DemoModeBadge from '../components/DemoModeBadge'
+import { useToast } from '../components/Toast'
 
 const PRODUCTS = [
   { id: 'demo-1', name: 'Premium Basmati Rice 5kg', category: 'Groceries', costPrice: 320, currentPrice: 449 },
@@ -13,6 +15,7 @@ const PRODUCTS = [
 const COMPARE_COLORS = ['#FF9933', '#138d75', '#7c3aed']
 
 export default function ComparePage() {
+  const { toast } = useToast()
   const [selected, setSelected] = useState<string[]>(['demo-1', 'demo-2'])
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -36,8 +39,11 @@ export default function ComparePage() {
     try {
       const data = await api.compareProducts({ products, city: 'Lucknow' })
       setResult(data)
+      if (data.demoMode) toast('info', 'AI demo mode — smart fallback data')
+      else toast('success', 'AI comparison complete!')
     } catch (err: any) {
       setError(err.message || 'AI comparison failed. Try again.')
+      toast('error', 'AI temporarily unavailable. Try again shortly.')
     } finally {
       setLoading(false)
     }
@@ -114,7 +120,9 @@ export default function ComparePage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-6">{error}</div>
+        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-xl text-sm mb-6">
+          AI features temporarily limited. Our servers are experiencing high demand. Please try again in a few minutes.
+        </div>
       )}
 
       {loading && (
@@ -293,6 +301,7 @@ export default function ComparePage() {
           </motion.div>
         </AnimatePresence>
       )}
+      <DemoModeBadge visible={!!result?.demoMode} />
     </div>
   )
 }

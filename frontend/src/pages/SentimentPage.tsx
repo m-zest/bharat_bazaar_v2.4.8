@@ -4,6 +4,8 @@ import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, 
 import { MessageSquareText, RotateCcw, Zap, ThumbsUp, ThumbsDown, Minus, AlertTriangle, CheckCircle2, Lightbulb, Globe } from 'lucide-react'
 import { api } from '../utils/api'
 import { ScrollReveal } from '../components/AnimatedComponents'
+import DemoModeBadge from '../components/DemoModeBadge'
+import { useToast } from '../components/Toast'
 
 const SAMPLE_REVIEWS = [
   'Product accha hai but delivery bahut slow thi. 5 din lag gaye aane mein.',
@@ -33,6 +35,7 @@ function getSentimentEmoji(score: number) {
 }
 
 export default function SentimentPage() {
+  const { toast } = useToast()
   const [productName, setProductName] = useState('Premium Basmati Rice 5kg')
   const [reviewText, setReviewText] = useState('')
   const [loading, setLoading] = useState(false)
@@ -66,8 +69,11 @@ export default function SentimentPage() {
         useDemo: !reviewText.trim(),
       })
       setResult(data)
+      if (data.demoMode) toast('info', 'AI demo mode — smart fallback data')
+      else toast('success', `${data.reviewCount || 0} reviews analyzed!`)
     } catch (err: any) {
       setError(err.message || 'Failed to analyze sentiment')
+      toast('error', 'AI temporarily unavailable. Try again shortly.')
     } finally {
       setLoading(false)
     }
@@ -164,7 +170,9 @@ export default function SentimentPage() {
             </motion.button>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+                AI features temporarily limited. Our servers are experiencing high demand. Please try again in a few minutes.
+              </div>
             )}
           </div>
 
@@ -401,6 +409,7 @@ export default function SentimentPage() {
           </AnimatePresence>
         </div>
       </div>
+      <DemoModeBadge visible={!!result?.demoMode} />
     </div>
   )
 }

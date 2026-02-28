@@ -3,6 +3,7 @@ import { invokeBedrockClaude, parseJSONResponse, BedrockThrottleError } from '..
 import { success, error, throttled } from '../utils/response';
 import { buildSentimentPrompt } from '../prompts/sentiment-prompt';
 import { DEMO_REVIEWS } from '../data/sample-data';
+import { getDemoSentimentResponse } from './demo-fallback';
 
 export interface SentimentRequest {
   productName: string;
@@ -54,8 +55,8 @@ export interface SentimentResponse {
 }
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  const body: SentimentRequest = JSON.parse(event.body || '{}');
   try {
-    const body: SentimentRequest = JSON.parse(event.body || '{}');
 
     if (!body.productName) {
       return error(400, 'Missing required field: productName', 'INVALID_REQUEST');
@@ -86,12 +87,11 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       productName: body.productName,
       reviewCount: reviews.length,
       analyzedAt: new Date().toISOString(),
+      demoMode: false,
     });
   } catch (err: any) {
-    console.error('Sentiment handler error:', err);
-    if (err instanceof BedrockThrottleError) {
-      return throttled(err.message, Math.round(err.retryAfterMs / 1000));
-    }
-    return error(500, err.message || 'Internal server error');
+    console.error('Sentiment handler error, using demo fallback:', err.message);
+    const reviewTexts = (body.reviews || []).map((r: any) => ({ text: r.text }));
+    return getDemoSentimentResponse(body.productName, reviewTexts.length > 0 ? reviewTexts : undefined);
   }
 }

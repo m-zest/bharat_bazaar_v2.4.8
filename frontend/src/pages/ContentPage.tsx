@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Languages, Copy, Check, RotateCcw, Zap, ChevronDown, ChevronUp, Search, Share2 } from 'lucide-react'
 import { api } from '../utils/api'
 import { ScrollReveal } from '../components/AnimatedComponents'
+import DemoModeBadge from '../components/DemoModeBadge'
+import { useToast } from '../components/Toast'
 
 const DEMO_PRODUCTS = [
   {
@@ -29,6 +31,7 @@ const LANGUAGES = [
 ]
 
 export default function ContentPage() {
+  const { toast } = useToast()
   const [productName, setProductName] = useState('')
   const [category, setCategory] = useState('Groceries')
   const [features, setFeatures] = useState('')
@@ -56,6 +59,7 @@ export default function ContentPage() {
   async function handleCopy(text: string, idx: number) {
     await navigator.clipboard.writeText(text)
     setCopiedIdx(idx)
+    toast('success', 'Copied to clipboard!')
     setTimeout(() => setCopiedIdx(null), 2000)
   }
 
@@ -80,8 +84,11 @@ export default function ContentPage() {
       })
       setResult(data)
       setExpandedIdx(0)
+      if (data.demoMode) toast('info', 'AI demo mode — smart fallback data')
+      else toast('success', `${selectedLangs.length} descriptions generated!`)
     } catch (err: any) {
       setError(err.message || 'Failed to generate descriptions')
+      toast('error', 'AI temporarily unavailable. Try again shortly.')
     } finally {
       setLoading(false)
     }
@@ -211,7 +218,9 @@ export default function ContentPage() {
           </motion.button>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+              AI features temporarily limited. Our servers are experiencing high demand. Please try again in a few minutes.
+            </div>
           )}
         </form>
 
@@ -358,6 +367,7 @@ export default function ContentPage() {
           </AnimatePresence>
         </div>
       </div>
+      <DemoModeBadge visible={!!result?.demoMode} />
     </div>
   )
 }

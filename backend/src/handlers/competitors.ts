@@ -3,17 +3,17 @@ import { success, error, throttled } from '../utils/response';
 import { invokeBedrockClaude, parseJSONResponse, BedrockThrottleError } from '../utils/bedrock-client';
 import { COMPETITOR_PRICES } from '../data/sample-data';
 import { REGIONAL_DATA, getUpcomingFestivals } from '../data/regional-data';
+import { getDemoCompetitorResponse } from './demo-fallback';
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  const body = JSON.parse(event.body || '{}');
+  const { products, city } = body;
+  const cityName = city || 'Lucknow';
   try {
-    const body = JSON.parse(event.body || '{}');
-    const { products, city } = body;
-
     if (!products || !Array.isArray(products) || products.length === 0) {
       return error(400, 'Provide at least 1 product to analyze', 'INVALID_REQUEST');
     }
 
-    const cityName = city || 'Lucknow';
     const cityData = REGIONAL_DATA[cityName];
     const festivals = getUpcomingFestivals(cityName, 3);
 
@@ -99,12 +99,9 @@ Make the price movements realistic — competitors don't all move the same direc
 
     const result = parseJSONResponse<any>(response);
 
-    return success(result);
+    return success({ ...result, demoMode: false });
   } catch (err: any) {
-    if (err instanceof BedrockThrottleError) {
-      return throttled(err.message, Math.round(err.retryAfterMs / 1000));
-    }
-    console.error('Competitors handler error:', err);
-    return error(500, err.message || 'Failed to analyze competitors');
+    console.error('Competitors handler error, using demo fallback:', err.message);
+    return getDemoCompetitorResponse(products, cityName);
   }
 }
