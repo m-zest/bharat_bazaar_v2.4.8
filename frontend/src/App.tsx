@@ -10,22 +10,25 @@ import ComparePage from './pages/ComparePage'
 import InventoryPage from './pages/InventoryPage'
 import CompetitorPage from './pages/CompetitorPage'
 import Layout from './components/Layout'
+import { ToastProvider } from './components/Toast'
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route element={<Layout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/sourcing" element={<SourcingPage />} />
-        <Route path="/pricing" element={<PricingPage />} />
-        <Route path="/chat" element={<ChatPage />} />
-        <Route path="/content" element={<ContentPage />} />
-        <Route path="/sentiment" element={<SentimentPage />} />
-        <Route path="/compare" element={<ComparePage />} />
-        <Route path="/inventory" element={<InventoryPage />} />
-        <Route path="/competitors" element={<CompetitorPage />} />
-      </Route>
-    </Routes>
+    <ToastProvider>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/sourcing" element={<SourcingPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/content" element={<ContentPage />} />
+          <Route path="/sentiment" element={<SentimentPage />} />
+          <Route path="/compare" element={<ComparePage />} />
+          <Route path="/inventory" element={<InventoryPage />} />
+          <Route path="/competitors" element={<CompetitorPage />} />
+        </Route>
+      </Routes>
+    </ToastProvider>
   )
 }

@@ -4,6 +4,7 @@ import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from 
 import { GitCompare, Check, TrendingUp, TrendingDown, Sparkles, Loader2 } from 'lucide-react'
 import { api } from '../utils/api'
 import DemoModeBadge from '../components/DemoModeBadge'
+import { useToast } from '../components/Toast'
 
 const PRODUCTS = [
   { id: 'demo-1', name: 'Premium Basmati Rice 5kg', category: 'Groceries', costPrice: 320, currentPrice: 449 },
@@ -14,6 +15,7 @@ const PRODUCTS = [
 const COMPARE_COLORS = ['#FF9933', '#138d75', '#7c3aed']
 
 export default function ComparePage() {
+  const { toast } = useToast()
   const [selected, setSelected] = useState<string[]>(['demo-1', 'demo-2'])
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -37,8 +39,11 @@ export default function ComparePage() {
     try {
       const data = await api.compareProducts({ products, city: 'Lucknow' })
       setResult(data)
+      if (data.demoMode) toast('info', 'AI demo mode — smart fallback data')
+      else toast('success', 'AI comparison complete!')
     } catch (err: any) {
       setError(err.message || 'AI comparison failed. Try again.')
+      toast('error', 'AI temporarily unavailable. Try again shortly.')
     } finally {
       setLoading(false)
     }

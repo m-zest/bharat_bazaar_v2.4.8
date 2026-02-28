@@ -165,8 +165,8 @@ export default function Dashboard() {
               onClick={() => setSelectedCity(c)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 selectedCity === c
-                  ? 'bg-[#1E1B4B] text-white shadow-lg'
-                  : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300'
+                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25'
+                  : 'bg-white border border-gray-200 text-gray-500 hover:border-orange-300'
               }`}
             >
               {c}
@@ -506,7 +506,7 @@ export default function Dashboard() {
 
       {/* ====== RECENT ACTIVITY ====== */}
       <ScrollReveal delay={0.1}>
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6">
           <h3 className="font-display font-semibold text-gray-900 mb-4">Recent Activity</h3>
           <div className="space-y-2">
             {data.recentActivity.map((a: any, i: number) => (
@@ -537,6 +537,16 @@ export default function Dashboard() {
           </div>
         </div>
       </ScrollReveal>
+
+      {/* ====== FOOTER ====== */}
+      <div className="text-center py-6 border-t border-gray-100">
+        <p className="text-xs text-gray-400 mb-1">
+          Built with ❤️ for Indian SMBs | Team ParityAi — AI4Bharat Hackathon 2026
+        </p>
+        <p className="text-[10px] text-gray-300">
+          Powered by AWS Bedrock · DynamoDB · Lambda · S3 · CloudFront · API Gateway
+        </p>
+      </div>
     </div>
   )
 }

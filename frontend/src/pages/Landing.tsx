@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { IndianRupee, Languages, MessageSquareText, ArrowRight, ArrowUpRight, Sparkles, Package, MessageCircle, Globe, BarChart3, Star, Zap, Check, Mail } from 'lucide-react'
 import { NavbarLogo, FullLogo, IconLogo, WordmarkLogo } from '../components/TarazuLogo'
 import { ScrollReveal, StaggerContainer, StaggerItem } from '../components/AnimatedComponents'
+import PhoneMockup from '../components/PhoneMockup'
 
 /* ──────────────── DATA ──────────────── */
 
@@ -220,70 +221,15 @@ export default function Landing() {
               </motion.div>
             </div>
 
-            {/* Right — Floating cards */}
-            <div className="relative hidden lg:block">
-              <motion.div initial={{ opacity: 0, y: 30, rotate: 2 }} animate={{ opacity: 1, y: 0, rotate: 2 }} transition={{ duration: 0.8, delay: 0.5 }}
-                className="bg-white rounded-2xl shadow-2xl shadow-black/10 p-5 border border-gray-100 w-[380px] ml-auto">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-xs text-[#999] font-medium">Dashboard Overview</p>
-                    <p className="text-sm font-bold text-[#1a1a1a]">Sharma Kirana Store</p>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-green-400" />
-                    <span className="text-[10px] text-[#999]">Live</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  {[
-                    { label: 'Trending', value: '8', color: 'text-orange-500' },
-                    { label: 'Confidence', value: '87%', color: 'text-teal-500' },
-                    { label: 'Sentiment', value: '72', color: 'text-violet-500' },
-                    { label: 'Growth', value: '+14%', color: 'text-green-500' },
-                  ].map(s => (
-                    <div key={s.label} className="bg-gray-50 rounded-xl p-3">
-                      <p className="text-[10px] text-[#999]">{s.label}</p>
-                      <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-[10px] text-[#999] mb-2">Revenue Trend</p>
-                  <div className="flex items-end gap-1 h-12">
-                    {[35, 45, 40, 55, 50, 65, 60, 72, 68].map((h, i) => (
-                      <motion.div key={i} initial={{ height: 0 }} animate={{ height: `${h}%` }}
-                        transition={{ delay: 1.2 + i * 0.08, duration: 0.4 }}
-                        className="flex-1 bg-gradient-to-t from-[#F97316] to-[#F59E0B] rounded-sm" />
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, x: -40, rotate: -3 }} animate={{ opacity: 1, x: 0, rotate: -3 }} transition={{ duration: 0.8, delay: 0.8 }}
-                className="absolute -left-8 top-[40%] bg-white rounded-2xl shadow-2xl shadow-black/10 p-4 border border-gray-100 w-[220px]">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#FEF3C7] flex items-center justify-center">
-                    <IndianRupee className="w-4 h-4 text-[#F97316]" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-[#999]">Best Strategy</p>
-                    <p className="text-sm font-bold text-[#1a1a1a]">₹415</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">+18% demand</span>
-                  <span className="text-[10px] text-[#999]">92% confident</span>
-                </div>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 20, rotate: 1 }} animate={{ opacity: 1, y: 0, rotate: 1 }} transition={{ duration: 0.8, delay: 1.1 }}
-                className="absolute right-8 -bottom-4 bg-[#1a1a1a] text-white rounded-2xl rounded-br-md shadow-2xl p-4 w-[240px]">
-                <p className="text-xs leading-relaxed">"Diwali ke liye umbrella aur fairy lights stock karo — 40% demand spike expected"</p>
-                <p className="text-[10px] text-white/40 mt-2 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-[#F97316]" /> AI Business Advisor
-                </p>
-              </motion.div>
-            </div>
+            {/* Right — Phone Mockup with live chat */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="flex justify-center lg:justify-end"
+            >
+              <PhoneMockup />
+            </motion.div>
           </div>
         </div>
       </section>

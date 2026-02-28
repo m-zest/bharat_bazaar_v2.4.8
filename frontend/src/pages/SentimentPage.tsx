@@ -5,6 +5,7 @@ import { MessageSquareText, RotateCcw, Zap, ThumbsUp, ThumbsDown, Minus, AlertTr
 import { api } from '../utils/api'
 import { ScrollReveal } from '../components/AnimatedComponents'
 import DemoModeBadge from '../components/DemoModeBadge'
+import { useToast } from '../components/Toast'
 
 const SAMPLE_REVIEWS = [
   'Product accha hai but delivery bahut slow thi. 5 din lag gaye aane mein.',
@@ -34,6 +35,7 @@ function getSentimentEmoji(score: number) {
 }
 
 export default function SentimentPage() {
+  const { toast } = useToast()
   const [productName, setProductName] = useState('Premium Basmati Rice 5kg')
   const [reviewText, setReviewText] = useState('')
   const [loading, setLoading] = useState(false)
@@ -67,8 +69,11 @@ export default function SentimentPage() {
         useDemo: !reviewText.trim(),
       })
       setResult(data)
+      if (data.demoMode) toast('info', 'AI demo mode — smart fallback data')
+      else toast('success', `${data.reviewCount || 0} reviews analyzed!`)
     } catch (err: any) {
       setError(err.message || 'Failed to analyze sentiment')
+      toast('error', 'AI temporarily unavailable. Try again shortly.')
     } finally {
       setLoading(false)
     }
