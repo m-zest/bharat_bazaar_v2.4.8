@@ -1,17 +1,33 @@
-import { parseJSONResponse, BedrockThrottleError } from '../utils/bedrock-client';
+import { parseJSONResponse, cleanJsonResponse, BedrockThrottleError } from '../utils/bedrock-client';
 
-// We test parseJSONResponse and BedrockThrottleError directly.
-// invokeBedrockClaude requires AWS SDK mocking and is tested indirectly via handler tests.
+// We test parseJSONResponse, cleanJsonResponse, and BedrockThrottleError directly.
+// invokeBedrockClaude requires AWS SDK / Gemini mocking and is tested indirectly via handler tests.
 
 describe('bedrock-client utilities', () => {
+  describe('cleanJsonResponse()', () => {
+    it('strips ```json wrapper from Gemini responses', () => {
+      const text = '```json\n{"price": 100}\n```';
+      expect(cleanJsonResponse(text)).toBe('{"price": 100}');
+    });
+
+    it('strips unlabeled ``` wrapper', () => {
+      const text = '```\n{"a": 1}\n```';
+      expect(cleanJsonResponse(text)).toBe('{"a": 1}');
+    });
+
+    it('returns plain JSON unchanged', () => {
+      expect(cleanJsonResponse('{"x": 42}')).toBe('{"x": 42}');
+    });
+  });
+
   describe('parseJSONResponse()', () => {
     it('parses plain JSON', () => {
       const result = parseJSONResponse<{ x: number }>('{"x": 42}');
       expect(result).toEqual({ x: 42 });
     });
 
-    it('extracts JSON from markdown code blocks', () => {
-      const text = 'Here is the result:\n```json\n{"price": 100}\n```\nEnd.';
+    it('extracts JSON from markdown code blocks (Gemini format)', () => {
+      const text = '```json\n{"price": 100}\n```';
       const result = parseJSONResponse<{ price: number }>(text);
       expect(result.price).toBe(100);
     });
