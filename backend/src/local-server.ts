@@ -37,9 +37,22 @@ function createEvent(req: express.Request): APIGatewayProxyEvent {
 }
 
 async function handleRoute(req: express.Request, res: express.Response, handler: Function) {
-  const result = await handler(createEvent(req));
-  res.status(result.statusCode).json(JSON.parse(result.body));
+  try {
+    const result = await handler(createEvent(req));
+    res.status(result.statusCode).json(JSON.parse(result.body));
+  } catch (err: any) {
+    console.error(`Route error [${req.method} ${req.path}]:`, err.message);
+    res.status(500).json({ success: false, error: { message: err.message || 'Internal server error' } });
+  }
 }
+
+// Prevent server crash on unhandled errors
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception (server still running):', err.message);
+});
+process.on('unhandledRejection', (reason: any) => {
+  console.error('Unhandled rejection (server still running):', reason?.message || reason);
+});
 
 // Auth Routes (public)
 app.post('/api/auth/register', (req, res) => handleRoute(req, res, authHandler));

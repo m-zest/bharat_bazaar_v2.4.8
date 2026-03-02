@@ -2,7 +2,10 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { invokeAI, parseJSONResponse } from '../utils/ai-client';
 import { success, error } from '../utils/response';
 import { buildHolidayRecommendationPrompt } from '../prompts/holiday-prompt';
-import { getHolidayById, getUpcomingHolidays, getSuppliersForCategories, INDIAN_STATES } from '../data/holiday-data';
+import {
+  getHolidayById, getUpcomingHolidays, getSuppliersForCategories, INDIAN_STATES,
+  getUpcomingHolidaysAsync, getHolidayByIdAsync, getHolidaysFromAPI,
+} from '../data/holiday-data';
 import { putItem } from '../utils/dynamodb-client';
 import { getCache, setCache } from '../utils/redis-client';
 
@@ -41,7 +44,8 @@ async function handleList(event: APIGatewayProxyEvent): Promise<APIGatewayProxyR
   const month = params.month ? parseInt(params.month) : undefined;
   const months = params.months ? parseInt(params.months) : 12;
 
-  const holidays = getUpcomingHolidays({ type, state, months, month });
+  // Use async version to fetch from Calendarific API (with cache + static fallback)
+  const holidays = await getUpcomingHolidaysAsync({ type, state, months, month });
 
   return success({
     holidays,
@@ -56,7 +60,8 @@ async function handleDetail(event: APIGatewayProxyEvent): Promise<APIGatewayProx
   const pathParts = (event.path || '').split('/');
   const holidayId = pathParts[pathParts.length - 1];
 
-  const holiday = getHolidayById(holidayId);
+  // Try async lookup (Calendarific + cache) first, then static fallback
+  const holiday = await getHolidayByIdAsync(holidayId);
   if (!holiday) {
     return error(404, `Holiday not found: ${holidayId}`, 'NOT_FOUND');
   }
@@ -78,7 +83,7 @@ async function handleRecommendations(event: APIGatewayProxyEvent): Promise<APIGa
   // path: /api/holidays/{id}/recommendations → id is at index -2
   const holidayId = pathParts[pathParts.length - 2];
 
-  const holiday = getHolidayById(holidayId);
+  const holiday = await getHolidayByIdAsync(holidayId);
   if (!holiday) {
     return error(404, `Holiday not found: ${holidayId}`, 'NOT_FOUND');
   }

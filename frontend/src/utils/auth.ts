@@ -137,6 +137,26 @@ export function getCurrentUser(): CognitoUser | null {
   }
 }
 
+export function getUserAttributes(): Promise<Record<string, string>> {
+  return new Promise((resolve) => {
+    const user = getPool().getCurrentUser();
+    if (!user) return resolve({});
+
+    user.getSession((err: Error | null, session: CognitoUserSession | null) => {
+      if (err || !session?.isValid()) return resolve({});
+
+      user.getUserAttributes((attrErr, attributes) => {
+        if (attrErr || !attributes) return resolve({});
+        const attrs: Record<string, string> = {};
+        attributes.forEach((attr) => {
+          attrs[attr.getName()] = attr.getValue();
+        });
+        resolve(attrs);
+      });
+    });
+  });
+}
+
 export function isConfigured(): boolean {
   return !!USER_POOL_ID && !!CLIENT_ID;
 }

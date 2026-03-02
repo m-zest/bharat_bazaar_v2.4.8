@@ -1,19 +1,34 @@
+import { useState, useEffect } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, IndianRupee, Languages, MessageSquareText, CalendarDays, Store, LogOut } from 'lucide-react'
-import { signOut, getCurrentUser, isConfigured } from '../utils/auth'
+import { signOut, getCurrentUser, getUserAttributes, isConfigured } from '../utils/auth'
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', labelHi: 'डैशबोर्ड', icon: LayoutDashboard },
   { path: '/pricing', label: 'Smart Pricing', labelHi: 'स्मार्ट प्राइसिंग', icon: IndianRupee },
   { path: '/content', label: 'Content Generator', labelHi: 'कंटेंट जेनरेटर', icon: Languages },
   { path: '/sentiment', label: 'Sentiment Analyzer', labelHi: 'सेंटिमेंट एनालाइज़र', icon: MessageSquareText },
-  { path: '/holidays', label: 'Holiday Demand', labelHi: 'त्योहार डिमांड', icon: CalendarDays },
+  { path: '/holidays', label: 'Festival Demand', labelHi: 'त्योहार डिमांड', icon: CalendarDays },
 ]
 
 export default function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   const cognitoUser = isConfigured() ? getCurrentUser() : null
+  const [userName, setUserName] = useState<string>('')
+  const [storeName, setStoreName] = useState<string>('')
+
+  useEffect(() => {
+    if (cognitoUser) {
+      getUserAttributes().then((attrs) => {
+        const name = attrs['name'] || attrs['email'] || cognitoUser.getUsername()
+        setUserName(name.split(' ')[0]) // first name only
+        if (attrs['custom:businessName']) {
+          setStoreName(attrs['custom:businessName'])
+        }
+      })
+    }
+  }, [cognitoUser])
 
   const handleSignOut = () => {
     signOut()
@@ -66,8 +81,9 @@ export default function Layout() {
           <div className="bg-bazaar-50 rounded-xl p-4">
             {cognitoUser ? (
               <>
-                <p className="text-xs font-medium text-bazaar-700">Logged In</p>
-                <p className="text-sm font-semibold text-bazaar-800 mt-1 truncate">{cognitoUser.getUsername()}</p>
+                <p className="text-sm font-semibold text-bazaar-800 truncate">{userName || cognitoUser.getUsername()}</p>
+                {storeName && <p className="text-xs font-medium text-bazaar-600 mt-0.5 truncate">{storeName}</p>}
+                <p className="text-[11px] text-bazaar-500 mt-0.5 truncate">{cognitoUser.getUsername()}</p>
               </>
             ) : (
               <>

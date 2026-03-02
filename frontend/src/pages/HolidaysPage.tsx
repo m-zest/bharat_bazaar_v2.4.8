@@ -16,7 +16,7 @@ export default function HolidaysPage() {
   const navigate = useNavigate()
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [type, setType] = useState('all')
+  const [type, setType] = useState('national')
   const [state, setState] = useState('')
   const [month, setMonth] = useState(0)
   const [search, setSearch] = useState('')
@@ -53,9 +53,9 @@ export default function HolidaysPage() {
           <CalendarDays className="w-6 h-6 text-saffron-600" />
         </div>
         <div>
-          <h1 className="font-display text-2xl font-bold text-gray-900">Holiday Demand Intelligence</h1>
+          <h1 className="font-display text-2xl font-bold text-gray-900">Festival Demand Intelligence</h1>
           <p className="text-gray-500 text-sm">
-            <span className="font-hindi">त्योहार डिमांड</span> — Plan stock for upcoming festivals and holidays
+            <span className="font-hindi">त्योहार डिमांड</span> — Plan stock for upcoming festivals
           </p>
         </div>
       </div>
@@ -68,7 +68,7 @@ export default function HolidaysPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search holidays..."
+              placeholder="Search festivals..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="input-field pl-10"
@@ -81,7 +81,7 @@ export default function HolidaysPage() {
             onChange={(e) => setType(e.target.value)}
             className="input-field"
           >
-            <option value="all">All Holidays</option>
+            <option value="all">All Festivals</option>
             <option value="national">National</option>
             <option value="regional">Regional</option>
           </select>
@@ -113,7 +113,7 @@ export default function HolidaysPage() {
 
       {/* Results count */}
       <p className="text-sm text-gray-500 mb-4">
-        {loading ? 'Loading...' : `${filteredHolidays.length} holidays found`}
+        {loading ? 'Loading...' : `${filteredHolidays.length} festivals found`}
       </p>
 
       {/* Holiday Grid */}
@@ -210,7 +210,7 @@ export default function HolidaysPage() {
       {!loading && filteredHolidays.length === 0 && (
         <div className="text-center py-16 text-gray-400">
           <CalendarDays className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p className="font-medium">No holidays found</p>
+          <p className="font-medium">No festivals found</p>
           <p className="text-sm mt-1">Try adjusting your filters</p>
         </div>
       )}

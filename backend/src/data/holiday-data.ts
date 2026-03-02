@@ -1,10 +1,22 @@
 // Holiday and supplier data for Indian retail demand planning
+// Combines Calendarific API data with static enrichment (Hindi names, traditions, categories)
+
+import {
+  fetchCalendarificHolidays,
+  mapCalendarificType,
+  generateHolidaySlug,
+  inferCategories,
+  estimateDemandMultiplier,
+  extractRegions,
+  CalendarificHoliday,
+} from '../utils/calendarific-client';
+import { getCache, setCache } from '../utils/redis-client';
 
 export interface Holiday {
   id: string;
   name: string;
   nameHi: string;
-  date: string; // YYYY-MM-DD (2026 dates)
+  date: string; // YYYY-MM-DD
   month: number;
   type: 'national' | 'regional';
   description: string;
@@ -12,6 +24,7 @@ export interface Holiday {
   categories: string[];
   demandMultiplier: number;
   traditions: string[];
+  source: 'static' | 'calendarific' | 'enriched'; // tracks data origin
 }
 
 export interface Supplier {
@@ -29,7 +42,7 @@ export interface Supplier {
 
 // --- National Holidays (pan-India) ---
 
-export const NATIONAL_HOLIDAYS: Holiday[] = [
+export const NATIONAL_HOLIDAYS: Omit<Holiday, 'source'>[] = [
   {
     id: 'makar-sankranti-2026',
     name: 'Makar Sankranti',
@@ -216,7 +229,7 @@ export const NATIONAL_HOLIDAYS: Holiday[] = [
 
 // --- Regional Holidays ---
 
-export const REGIONAL_HOLIDAYS: Holiday[] = [
+export const REGIONAL_HOLIDAYS: Omit<Holiday, 'source'>[] = [
   {
     id: 'pongal-2026',
     name: 'Pongal',
@@ -612,14 +625,165 @@ export const SUPPLIERS: Supplier[] = [
   },
 ];
 
-// --- All holidays combined ---
+// --- Static holidays as fallback + enrichment source ---
 
-export const ALL_HOLIDAYS: Holiday[] = [...NATIONAL_HOLIDAYS, ...REGIONAL_HOLIDAYS];
+const STATIC_HOLIDAYS: Omit<Holiday, 'source'>[] = [...NATIONAL_HOLIDAYS, ...REGIONAL_HOLIDAYS];
+
+// --- Hindi name & tradition enrichment map (keyed by lowercase holiday name keywords) ---
+// Used to enrich Calendarific API results with data they don't provide
+
+const ENRICHMENT_MAP: Record<string, { nameHi: string; traditions: string[]; demandMultiplier?: number; categories?: string[]; displayName?: string }> = {
+  'makar sankranti': { nameHi: 'मकर संक्रांति', traditions: ['Kite flying', 'Til-gur sweets', 'Sesame & jaggery products', 'New clothes'], demandMultiplier: 1.8 },
+  'republic day': { nameHi: 'गणतंत्र दिवस', traditions: ['Flag hoisting', 'Patriotic events', 'School functions'] },
+  'holi': { nameHi: 'होली', traditions: ['Color play', 'Gujiya & thandai', 'Water guns (pichkari)', 'White clothes', 'Bhang preparation'], demandMultiplier: 2.2 },
+  'ramzan id': { displayName: 'Eid ul-Fitr', nameHi: 'ईद उल-फ़ित्र', traditions: ['New clothes', 'Attar/perfume', 'Sewaiyan', 'Dry fruits', 'Gift boxes'], demandMultiplier: 2.3 },
+  'eid ul-fitr': { nameHi: 'ईद उल-फ़ित्र', traditions: ['New clothes', 'Attar/perfume', 'Sewaiyan', 'Dry fruits', 'Gift boxes'], demandMultiplier: 2.3 },
+  'eid': { nameHi: 'ईद', traditions: ['New clothes', 'Attar/perfume', 'Sewaiyan', 'Dry fruits', 'Gift boxes'], demandMultiplier: 2.3 },
+  'eid al-fitr': { nameHi: 'ईद उल-फ़ित्र', traditions: ['New clothes', 'Attar/perfume', 'Sewaiyan', 'Dry fruits', 'Gift boxes'], demandMultiplier: 2.3 },
+  'eid al-adha': { nameHi: 'ईद उल-अज़हा', traditions: ['Qurbani', 'New clothes', 'Biryani feast', 'Gift giving'], demandMultiplier: 2.0 },
+  'raksha bandhan': { nameHi: 'रक्षा बंधन', traditions: ['Rakhi threads', 'Mithai boxes', 'Gift sets', 'Chocolates', 'Sibling gifts'], demandMultiplier: 2.5 },
+  'independence day': { nameHi: 'स्वतंत्रता दिवस', traditions: ['Flag hoisting', 'Tricolor merchandise', 'School events', 'Kite flying'] },
+  'ganesh chaturthi': { nameHi: 'गणेश चतुर्थी', traditions: ['Ganesh idols', 'Modak & laddu', 'Pooja items', 'Flowers & decoration', 'Eco-friendly idols'], demandMultiplier: 2.0 },
+  'navratri': { nameHi: 'नवरात्रि', traditions: ['Garba/Dandiya nights', 'Chaniya choli', 'Dandiya sticks', 'Pooja items', '9 colors for 9 days'], demandMultiplier: 2.3 },
+  'dussehra': { nameHi: 'दशहरा', traditions: ['Ravan dahan', 'New purchases', 'Gold buying', 'Weapon worship'], demandMultiplier: 2.0 },
+  'vijayadashami': { nameHi: 'विजयादशमी', traditions: ['Ravan dahan', 'New purchases', 'Gold buying'], demandMultiplier: 2.0 },
+  'karva chauth': { nameHi: 'करवा चौथ', traditions: ['Mehndi/henna', 'Bangles & jewelry', 'Sargi thali', 'Saree/suit shopping'], demandMultiplier: 1.8 },
+  'diwali': { nameHi: 'दिवाली', traditions: ['Diyas & candles', 'Rangoli', 'Lakshmi-Ganesh pooja', 'Sweets & dry fruits', 'Firecrackers', 'New electronics', 'Gold buying'], demandMultiplier: 3.0 },
+  'deepavali': { nameHi: 'दीपावली', traditions: ['Diyas & candles', 'Rangoli', 'Lakshmi-Ganesh pooja', 'Sweets & dry fruits', 'Firecrackers'], demandMultiplier: 3.0 },
+  'bhai dooj': { nameHi: 'भाई दूज', traditions: ['Tilak ceremony', 'Gifts for brothers', 'Sweets', 'Family gatherings'] },
+  'christmas': { nameHi: 'क्रिसमस', traditions: ['Gift exchanges', 'Christmas trees & decor', 'Cakes & plum pudding', 'Year-end sales'], demandMultiplier: 1.8 },
+  'pongal': { nameHi: 'पोंगल', traditions: ['Pongal pot', 'New rice & sugarcane', 'Kolam/Rangoli', 'New clothes'], demandMultiplier: 2.5 },
+  'lohri': { nameHi: 'लोहड़ी', traditions: ['Bonfire', 'Rewri & gajak', 'Peanuts & popcorn', 'Bhangra'], demandMultiplier: 1.8 },
+  'baisakhi': { nameHi: 'बैसाखी', traditions: ['Bhangra & Gidda', 'New turbans', 'Festive food', 'Gurudwara visits'], demandMultiplier: 2.0 },
+  'vaisakhi': { nameHi: 'बैसाखी', traditions: ['Bhangra & Gidda', 'New turbans', 'Festive food', 'Gurudwara visits'], demandMultiplier: 2.0 },
+  'ugadi': { nameHi: 'उगादी', traditions: ['Ugadi pachadi', 'Neem & jaggery', 'New clothes', 'Home decoration'], demandMultiplier: 1.8 },
+  'gudi padwa': { nameHi: 'गुड़ी पाड़वा', traditions: ['Gudi flag', 'Neem & jaggery', 'New clothes'], demandMultiplier: 1.8 },
+  'vishu': { nameHi: 'विशु', traditions: ['Vishukkani', 'Vishukaineetam', 'New clothes', 'Sadhya feast'], demandMultiplier: 1.7 },
+  'bihu': { nameHi: 'बिहू', traditions: ['Bihu dance', 'Gamosa', 'Pitha (rice cakes)', 'Traditional weaving'], demandMultiplier: 2.0 },
+  'rath yatra': { nameHi: 'रथ यात्रा', traditions: ['Chariot pulling', 'Prasad & mahaprasad', 'Religious merchandise'], demandMultiplier: 1.6 },
+  'teej': { nameHi: 'तीज', traditions: ['Mehndi application', 'Green bangles & sarees', 'Ghewar sweet', 'Swing festivals'], demandMultiplier: 1.9 },
+  'onam': { nameHi: 'ओणम', traditions: ['Onam Sadhya', 'Pookalam', 'Boat races', 'Kasavu saree'], demandMultiplier: 2.5 },
+  'durga puja': { nameHi: 'दुर्गा पूजा', traditions: ['Pandal hopping', 'New sarees & kurtas', 'Dhunuchi dance', 'Bhog prasad'], demandMultiplier: 2.8 },
+  'chhath puja': { nameHi: 'छठ पूजा', traditions: ['Sunrise/sunset worship', 'Thekua', 'Sugarcane & fruits', 'Bamboo baskets'], demandMultiplier: 2.0 },
+  'chhath': { nameHi: 'छठ पूजा', traditions: ['Sunrise/sunset worship', 'Thekua', 'Sugarcane & fruits'], demandMultiplier: 2.0 },
+  'guru nanak': { nameHi: 'गुरु नानक जयंती', traditions: ['Langar seva', 'Nagar kirtan', 'Gurudwara decoration'], demandMultiplier: 1.5 },
+  'maha shivaratri': { nameHi: 'महा शिवरात्रि', traditions: ['Shiva temple visits', 'Fasting', 'Bel patra offering', 'Night vigil'], demandMultiplier: 1.5 },
+  'ram navami': { nameHi: 'राम नवमी', traditions: ['Ram temple visits', 'Bhajan/kirtan', 'Fasting', 'Processions'], demandMultiplier: 1.4 },
+  'janmashtami': { nameHi: 'जन्माष्टमी', traditions: ['Dahi handi', 'Midnight celebration', 'Fasting', 'Krishna decoration'], demandMultiplier: 1.8 },
+  'krishna janmashtami': { nameHi: 'जन्माष्टमी', traditions: ['Dahi handi', 'Midnight celebration', 'Fasting'], demandMultiplier: 1.8 },
+  'buddha purnima': { nameHi: 'बुद्ध पूर्णिमा', traditions: ['Temple visits', 'Meditation', 'Charity'], demandMultiplier: 1.2 },
+  'mahavir jayanti': { nameHi: 'महावीर जयंती', traditions: ['Jain temple visits', 'Processions', 'Charity'], demandMultiplier: 1.2 },
+  'gandhi jayanti': { nameHi: 'गांधी जयंती', traditions: ['Prayer meetings', 'Cleanliness drives', 'Patriotic events'] },
+  'muharram': { nameHi: 'मुहर्रम', traditions: ['Tazia processions', 'Mourning gatherings', 'Sherbet distribution'], demandMultiplier: 1.3 },
+  'milad un-nabi': { nameHi: 'मीलाद-उन-नबी', traditions: ['Processions', 'Mosque gatherings', 'Charity'], demandMultiplier: 1.3 },
+};
+
+/**
+ * Find enrichment data for a Calendarific holiday by matching name keywords
+ */
+function findEnrichment(name: string): { nameHi: string; traditions: string[]; demandMultiplier?: number; categories?: string[]; displayName?: string } | null {
+  const nameLower = name.toLowerCase();
+  // Try exact match first, then partial match
+  for (const [key, value] of Object.entries(ENRICHMENT_MAP)) {
+    if (nameLower.includes(key)) return value;
+  }
+  return null;
+}
+
+/**
+ * Convert a Calendarific holiday to our Holiday interface
+ */
+function calendarificToHoliday(cal: CalendarificHoliday): Holiday {
+  const enrichment = findEnrichment(cal.name);
+  const type = mapCalendarificType(cal.type);
+  const regions = extractRegions(cal.states);
+
+  const displayName = enrichment?.displayName || cal.name;
+
+  return {
+    id: generateHolidaySlug(displayName, cal.date.iso),
+    name: displayName,
+    nameHi: enrichment?.nameHi || displayName, // fallback to English if no Hindi name
+    date: cal.date.iso,
+    month: cal.date.datetime.month,
+    type,
+    description: cal.description || `${cal.name} — ${cal.type.join(', ')}`,
+    regions,
+    categories: enrichment?.categories || inferCategories(cal.type, cal.name),
+    demandMultiplier: enrichment?.demandMultiplier || estimateDemandMultiplier(cal.type, cal.name),
+    traditions: enrichment?.traditions || [],
+    source: enrichment ? 'enriched' : 'calendarific',
+  };
+}
+
+// --- Cache key for Calendarific data ---
+const CALENDARIFIC_CACHE_KEY = (year: number) => `CALENDARIFIC_HOLIDAYS:${year}`;
+const CALENDARIFIC_CACHE_TTL = 86400 * 7; // 7 days — holidays don't change frequently
+
+/**
+ * Fetch holidays from Calendarific API with DynamoDB caching.
+ * Falls back to static data if API is unavailable or API key is not set.
+ */
+export async function getHolidaysFromAPI(year?: number): Promise<Holiday[]> {
+  const targetYear = year || new Date().getFullYear();
+
+  // Check if API key is configured
+  if (!process.env.CALENDARIFIC_API_KEY) {
+    console.log('No CALENDARIFIC_API_KEY — using static holiday data');
+    return STATIC_HOLIDAYS.map(h => ({ ...h, source: 'static' as const }));
+  }
+
+  // Try cache first
+  const cacheKey = CALENDARIFIC_CACHE_KEY(targetYear);
+  const cached = await getCache<Holiday[]>(cacheKey);
+  if (cached) {
+    console.log(`Using cached Calendarific data for ${targetYear}`);
+    return cached;
+  }
+
+  // Fetch from Calendarific
+  const apiHolidays = await fetchCalendarificHolidays({ year: targetYear });
+
+  if (apiHolidays.length === 0) {
+    console.log('Calendarific returned empty — falling back to static data');
+    return STATIC_HOLIDAYS.map(h => ({ ...h, source: 'static' as const }));
+  }
+
+  // Convert API holidays to our format
+  const converted = apiHolidays.map(calendarificToHoliday);
+
+  // Deduplicate by date + similar name (Calendarific sometimes has duplicates)
+  const seen = new Set<string>();
+  const deduped = converted.filter(h => {
+    const key = `${h.date}:${h.name.toLowerCase().replace(/[^a-z]/g, '').slice(0, 15)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  // Cache the result
+  await setCache(cacheKey, deduped, CALENDARIFIC_CACHE_TTL);
+  console.log(`Cached ${deduped.length} Calendarific holidays for ${targetYear}`);
+
+  return deduped;
+}
+
+// --- Synchronous fallback (for backward compatibility) ---
+
+export const ALL_HOLIDAYS: Holiday[] = STATIC_HOLIDAYS.map(h => ({ ...h, source: 'static' as const }));
 
 // --- Helper Functions ---
 
 export function getHolidayById(id: string): Holiday | undefined {
   return ALL_HOLIDAYS.find(h => h.id === id);
+}
+
+/**
+ * Async version - looks up by ID from API data first, then static fallback
+ */
+export async function getHolidayByIdAsync(id: string, holidays?: Holiday[]): Promise<Holiday | undefined> {
+  const source = holidays || await getHolidaysFromAPI();
+  return source.find(h => h.id === id);
 }
 
 export function getUpcomingHolidays(options: {
@@ -628,10 +792,30 @@ export function getUpcomingHolidays(options: {
   months?: number;
   month?: number;
 } = {}): (Holiday & { daysAway: number })[] {
+  return filterAndSortHolidays(ALL_HOLIDAYS, options);
+}
+
+/**
+ * Async version - fetches from Calendarific API with cache, then filters
+ */
+export async function getUpcomingHolidaysAsync(options: {
+  type?: 'national' | 'regional' | 'all';
+  state?: string;
+  months?: number;
+  month?: number;
+} = {}): Promise<(Holiday & { daysAway: number })[]> {
+  const holidays = await getHolidaysFromAPI();
+  return filterAndSortHolidays(holidays, options);
+}
+
+function filterAndSortHolidays(
+  allHolidays: Holiday[],
+  options: { type?: 'national' | 'regional' | 'all'; state?: string; months?: number; month?: number }
+): (Holiday & { daysAway: number })[] {
   const { type = 'all', state, months = 12, month } = options;
   const now = new Date();
 
-  let holidays = ALL_HOLIDAYS;
+  let holidays = allHolidays;
 
   // Filter by type
   if (type !== 'all') {
@@ -654,11 +838,10 @@ export function getUpcomingHolidays(options: {
   return holidays
     .map(h => {
       const holidayDate = new Date(h.date);
-      let daysAway = Math.ceil((holidayDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      // If holiday has passed this year, show distance (negative means past)
+      const daysAway = Math.ceil((holidayDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       return { ...h, daysAway };
     })
-    .filter(h => h.daysAway <= months * 30 && h.daysAway >= -7) // include holidays up to 7 days ago
+    .filter(h => h.daysAway <= months * 30 && h.daysAway >= -7)
     .sort((a, b) => a.daysAway - b.daysAway);
 }
 
@@ -670,9 +853,10 @@ export function getSuppliersForCategories(categories: string[]): Supplier[] {
 
 // Map of Indian states for regional filter dropdown
 export const INDIAN_STATES = [
-  'Andhra Pradesh', 'Assam', 'Bihar', 'Chandigarh', 'Delhi',
-  'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
-  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Northeast India', 'Odisha',
-  'Puducherry', 'Punjab', 'Rajasthan', 'Tamil Nadu', 'Telangana',
-  'Tripura', 'Uttar Pradesh', 'West Bengal',
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chandigarh',
+  'Chhattisgarh', 'Delhi', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh',
+  'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra',
+  'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Northeast India', 'Odisha',
+  'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana',
+  'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
 ] as const;

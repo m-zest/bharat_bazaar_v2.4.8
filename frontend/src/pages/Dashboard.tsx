@@ -12,10 +12,17 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [selectedCity, setSelectedCity] = useState('Lucknow')
+  const [nationalHolidays, setNationalHolidays] = useState<any[]>([])
 
   useEffect(() => {
     loadDashboard()
   }, [selectedCity])
+
+  useEffect(() => {
+    api.getHolidays({ type: 'national' }).then((result) => {
+      setNationalHolidays((result.holidays || []).slice(0, 5))
+    }).catch(() => {})
+  }, [])
 
   async function loadDashboard() {
     setLoading(true)
@@ -163,7 +170,7 @@ export default function Dashboard() {
       <div className="grid lg:grid-cols-2 gap-6 mb-8">
         <div className="card">
           <h3 className="font-display font-semibold text-gray-900 mb-4">Category Distribution</h3>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie
                 data={data.charts.categoryDistribution}
@@ -171,8 +178,14 @@ export default function Dashboard() {
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                outerRadius={80}
-                label={({ name, value }) => `${name} ${value}%`}
+                innerRadius={40}
+                outerRadius={70}
+                paddingAngle={3}
+                label={({ name, value, x, y }) => (
+                  <text x={x} y={y} textAnchor="middle" dominantBaseline="central" className="text-[11px] fill-gray-600">
+                    {name} {value}%
+                  </text>
+                )}
               >
                 {data.charts.categoryDistribution.map((_: any, i: number) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -186,33 +199,29 @@ export default function Dashboard() {
         <div className="card">
           <h3 className="font-display font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-saffron-500" />
-            Upcoming Festivals — {selectedCity}
+            Upcoming National Festivals
           </h3>
           <div className="space-y-3">
-            {data.regionalInfo.festivals.length > 0 ? data.regionalInfo.festivals.map((f: any, i: number) => {
-              // Map festival name to holiday ID slug
-              const slug = f.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-2026'
-              return (
+            {nationalHolidays.length > 0 ? nationalHolidays.map((h: any, i: number) => (
               <div
                 key={i}
-                onClick={() => navigate(`/holidays/${slug}`)}
+                onClick={() => navigate(`/holidays/${h.id}`)}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-saffron-50 transition-colors group"
               >
                 <div>
-                  <p className="font-medium text-gray-900 group-hover:text-saffron-700">{f.name}</p>
-                  <p className="text-xs text-gray-500">{f.daysAway} days away</p>
+                  <p className="font-medium text-gray-900 group-hover:text-saffron-700">{h.name}</p>
+                  <p className="text-xs text-gray-500">{h.daysAway <= 0 ? 'Today!' : `${h.daysAway} days away`}</p>
                 </div>
                 <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                  f.impact === 'very_high' ? 'bg-clay-100 text-clay-500' :
-                  f.impact === 'high' ? 'bg-saffron-100 text-saffron-600' :
+                  h.demandMultiplier >= 2.5 ? 'bg-clay-100 text-clay-500' :
+                  h.demandMultiplier >= 1.5 ? 'bg-saffron-100 text-saffron-600' :
                   'bg-gray-100 text-gray-600'
                 }`}>
-                  {f.impact.replace('_', ' ')} impact
+                  {h.demandMultiplier}x demand
                 </span>
               </div>
-              )
-            }) : (
-              <p className="text-gray-400 text-sm">No major festivals in the next few months</p>
+            )) : (
+              <p className="text-gray-400 text-sm">No upcoming national festivals</p>
             )}
           </div>
         </div>

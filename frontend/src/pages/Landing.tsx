@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Store, IndianRupee, Languages, MessageSquareText, ArrowRight, Sparkles, MapPin, TrendingUp, Zap } from 'lucide-react'
+import { Store, IndianRupee, Languages, MessageSquareText, ArrowRight, Sparkles, MapPin, TrendingUp, Zap, LayoutDashboard } from 'lucide-react'
+import { getCurrentUser, isConfigured } from '../utils/auth'
 
 const features = [
   {
@@ -35,6 +36,7 @@ const stats = [
 
 export default function Landing() {
   const navigate = useNavigate()
+  const isLoggedIn = isConfigured() && !!getCurrentUser()
 
   return (
     <div className="min-h-screen bg-white">
@@ -52,18 +54,30 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-500 hidden sm:block font-hindi">भारत के लिए AI</span>
-            <button
-              onClick={() => navigate('/login')}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => navigate('/signup')}
-              className="btn-primary flex items-center gap-2 text-sm"
-            >
-              Sign Up <ArrowRight className="w-4 h-4" />
-            </button>
+            {isLoggedIn ? (
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="btn-primary flex items-center gap-2 text-sm"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Go to Dashboard
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => navigate('/signup')}
+                  className="btn-primary flex items-center gap-2 text-sm"
+                >
+                  Sign Up <ArrowRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>

@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   CalendarDays, ArrowLeft, TrendingUp, Package, Truck, Star,
-  MapPin, Tag, Sparkles, Clock, IndianRupee, ShoppingBag, Users
+  MapPin, Tag, Sparkles, Clock, IndianRupee, ShoppingBag, Users, Check, Filter
 } from 'lucide-react'
 import { api } from '../utils/api'
 
@@ -15,6 +15,7 @@ export default function HolidayDetailPage() {
   const [recsLoading, setRecsLoading] = useState(false)
   const [selectedCity, setSelectedCity] = useState('Lucknow')
   const [error, setError] = useState('')
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
 
   const CITIES = ['Lucknow', 'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 'Ahmedabad', 'Pune', 'Jaipur', 'Indore']
 
@@ -76,6 +77,27 @@ export default function HolidayDetailPage() {
   }
 
   const { holiday, suppliers } = detail
+
+  function toggleItem(itemName: string, category: string) {
+    setSelectedItems(prev => {
+      const next = new Set(prev)
+      const key = `${itemName}::${category}`
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  // Get selected categories from chosen items
+  const selectedCategories = [...selectedItems].map(key => key.split('::')[1])
+  const uniqueSelectedCategories = [...new Set(selectedCategories)]
+
+  // Filter suppliers: if items are selected, show only suppliers matching those categories
+  const filteredSuppliers = selectedItems.size > 0
+    ? (suppliers || []).filter((s: any) =>
+        s.categories.some((cat: string) => uniqueSelectedCategories.includes(cat))
+      )
+    : suppliers || []
 
   return (
     <div className="p-8 max-w-[1400px]">
@@ -179,18 +201,33 @@ export default function HolidayDetailPage() {
         ) : recommendations?.recommendations?.length > 0 ? (
           <AnimatePresence>
             <div className="grid md:grid-cols-2 gap-4">
-              {recommendations.recommendations.map((rec: any, i: number) => (
+              {recommendations.recommendations.map((rec: any, i: number) => {
+                const itemKey = `${rec.itemName}::${rec.category}`
+                const isSelected = selectedItems.has(itemKey)
+                return (
                 <motion.div
                   key={rec.itemName}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
-                  className="card"
+                  onClick={() => toggleItem(rec.itemName, rec.category)}
+                  className={`card cursor-pointer transition-all ${
+                    isSelected
+                      ? 'ring-2 ring-saffron-500 bg-saffron-50/30'
+                      : 'hover:ring-1 hover:ring-gray-200'
+                  }`}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{rec.itemName}</h3>
-                      <span className="text-xs text-gray-400">{rec.category}</span>
+                    <div className="flex items-start gap-3">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
+                        isSelected ? 'bg-saffron-500 text-white' : 'bg-gray-100 text-transparent'
+                      }`}>
+                        <Check className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{rec.itemName}</h3>
+                        <span className="text-xs text-gray-400">{rec.category}</span>
+                      </div>
                     </div>
                     <span className="flex items-center gap-1 text-sm font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
                       <TrendingUp className="w-3.5 h-3.5" />
@@ -199,7 +236,7 @@ export default function HolidayDetailPage() {
                   </div>
 
                   {/* Price range */}
-                  <div className="flex items-center gap-4 mt-3 text-sm">
+                  <div className="flex items-center gap-4 mt-3 text-sm ml-9">
                     <span className="flex items-center gap-1 text-gray-600">
                       <IndianRupee className="w-3.5 h-3.5" />
                       {rec.priceRange?.min && rec.priceRange?.max
@@ -213,14 +250,14 @@ export default function HolidayDetailPage() {
                   </div>
 
                   {/* Stock advice */}
-                  <p className="text-sm text-gray-500 mt-3 bg-gray-50 rounded-xl p-3">
+                  <p className="text-sm text-gray-500 mt-3 bg-gray-50 rounded-xl p-3 ml-9">
                     <ShoppingBag className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
                     {rec.stockAdvice}
                   </p>
 
                   {/* Trending variants */}
                   {rec.trendingVariants?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-3">
+                    <div className="flex flex-wrap gap-1.5 mt-3 ml-9">
                       {rec.trendingVariants.map((v: string) => (
                         <span key={v} className="text-[10px] px-2 py-0.5 bg-royal-50 text-royal-600 rounded-full">
                           {v}
@@ -230,9 +267,10 @@ export default function HolidayDetailPage() {
                   )}
 
                   {/* Reasoning */}
-                  <p className="text-xs text-gray-400 mt-3 italic">{rec.reasoning}</p>
+                  <p className="text-xs text-gray-400 mt-3 italic ml-9">{rec.reasoning}</p>
                 </motion.div>
-              ))}
+                )
+              })}
             </div>
           </AnimatePresence>
         ) : !recsLoading && (
@@ -246,23 +284,65 @@ export default function HolidayDetailPage() {
         {recommendations?.fromCache && (
           <p className="text-xs text-gray-400 mt-2 text-right">Cached result — generated {recommendations.generatedAt ? new Date(recommendations.generatedAt).toLocaleDateString() : 'recently'}</p>
         )}
+
+        {/* Selection hint */}
+        {recommendations?.recommendations?.length > 0 && (
+          <div className="flex items-center gap-2 mt-3 text-xs text-gray-400">
+            <Filter className="w-3.5 h-3.5" />
+            {selectedItems.size > 0
+              ? `${selectedItems.size} item${selectedItems.size > 1 ? 's' : ''} selected — showing matching suppliers below`
+              : 'Click items above to filter suppliers who can supply them'}
+          </div>
+        )}
       </div>
 
       {/* Suppliers Section */}
       <div>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-bazaar-100 flex items-center justify-center">
-            <Truck className="w-5 h-5 text-bazaar-600" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-bazaar-100 flex items-center justify-center">
+              <Truck className="w-5 h-5 text-bazaar-600" />
+            </div>
+            <div>
+              <h2 className="font-display font-bold text-lg text-gray-900">
+                Suppliers & Wholesalers
+                {selectedItems.size > 0 && (
+                  <span className="text-sm font-normal text-gray-400 ml-2">
+                    ({filteredSuppliers.length} matching)
+                  </span>
+                )}
+              </h2>
+              <p className="text-xs text-gray-400">
+                {selectedItems.size > 0
+                  ? `Showing suppliers for: ${uniqueSelectedCategories.join(', ')}`
+                  : `Verified suppliers for ${holiday.categories.join(', ')}`
+                }
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-display font-bold text-lg text-gray-900">Suppliers & Wholesalers</h2>
-            <p className="text-xs text-gray-400">Verified suppliers for {holiday.categories.join(', ')}</p>
-          </div>
+          {selectedItems.size > 0 && (
+            <button
+              onClick={() => setSelectedItems(new Set())}
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-100"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
 
-        {suppliers?.length > 0 ? (
+        {filteredSuppliers.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {suppliers.map((supplier: any, i: number) => (
+            {filteredSuppliers.map((supplier: any, i: number) => {
+              // Estimate if supplier can ship to selected city
+              const sameCity = supplier.city.toLowerCase() === selectedCity.toLowerCase()
+              const estimatedDays = sameCity ? 1 : supplier.deliveryDays
+
+              // Highlight categories that match selection
+              const matchingCats = selectedItems.size > 0
+                ? supplier.categories.filter((cat: string) => uniqueSelectedCategories.includes(cat))
+                : []
+
+              return (
               <motion.div
                 key={supplier.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -278,8 +358,15 @@ export default function HolidayDetailPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1 text-xs text-gray-400 mb-3">
-                  <MapPin className="w-3 h-3" /> {supplier.city}
+                <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-3 h-3" /> {supplier.city}
+                  </span>
+                  {sameCity ? (
+                    <span className="text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">Same city</span>
+                  ) : (
+                    <span className="text-gray-500">Ships to {selectedCity} in ~{estimatedDays}d</span>
+                  )}
                 </div>
 
                 <div className="space-y-2 text-sm">
@@ -291,9 +378,9 @@ export default function HolidayDetailPage() {
                   </div>
                   <div className="flex items-center justify-between text-gray-600">
                     <span className="flex items-center gap-1.5">
-                      <Truck className="w-3.5 h-3.5 text-gray-400" /> Delivery
+                      <Truck className="w-3.5 h-3.5 text-gray-400" /> Delivery to {selectedCity}
                     </span>
-                    <span className="font-medium">{supplier.deliveryDays} days</span>
+                    <span className="font-medium">{sameCity ? 'Same day - 1 day' : `${estimatedDays} days`}</span>
                   </div>
                   <div className="flex items-center justify-between text-gray-600">
                     <span className="flex items-center gap-1.5">
@@ -309,21 +396,34 @@ export default function HolidayDetailPage() {
                   </div>
                 </div>
 
-                {/* Categories */}
+                {/* Categories — highlight matching ones */}
                 <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t border-gray-100">
                   {supplier.categories.map((cat: string) => (
-                    <span key={cat} className="text-[10px] px-2 py-0.5 bg-bazaar-50 text-bazaar-600 rounded-full">
+                    <span key={cat} className={`text-[10px] px-2 py-0.5 rounded-full ${
+                      matchingCats.includes(cat)
+                        ? 'bg-saffron-100 text-saffron-700 font-semibold'
+                        : 'bg-bazaar-50 text-bazaar-600'
+                    }`}>
                       {cat}
                     </span>
                   ))}
                 </div>
               </motion.div>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <div className="text-center py-12 text-gray-400 card">
             <Truck className="w-10 h-10 mx-auto mb-3 opacity-50" />
-            <p>No suppliers found for these categories</p>
+            <p className="font-medium">No suppliers found{selectedItems.size > 0 ? ' for selected items' : ''}</p>
+            {selectedItems.size > 0 && (
+              <button
+                onClick={() => setSelectedItems(new Set())}
+                className="text-saffron-500 text-sm mt-2 hover:underline"
+              >
+                Clear selection to see all suppliers
+              </button>
+            )}
           </div>
         )}
       </div>

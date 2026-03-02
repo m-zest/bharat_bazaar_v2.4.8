@@ -29,6 +29,10 @@ export class BharatBazaarAppStack extends cdk.Stack {
       || this.node.tryGetContext('geminiApiKey')
       || '';
 
+    const calendarificApiKey = process.env.CALENDARIFIC_API_KEY
+      || this.node.tryGetContext('calendarificApiKey')
+      || '';
+
     // --- Cognito User Pool ---
 
     const userPool = new cognito.UserPool(this, 'BharatBazaarUserPool', {
@@ -98,6 +102,7 @@ export class BharatBazaarAppStack extends cdk.Stack {
       DYNAMODB_TABLE_NAME: props.table.tableName,
       GEMINI_API_KEY: geminiApiKey,
       GEMINI_MODEL_ID: 'gemini-2.0-flash',
+      CALENDARIFIC_API_KEY: calendarificApiKey,
       COGNITO_USER_POOL_ID: userPool.userPoolId,
       COGNITO_CLIENT_ID: userPoolClient.userPoolClientId,
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
