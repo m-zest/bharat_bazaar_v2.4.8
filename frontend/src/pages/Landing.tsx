@@ -13,6 +13,7 @@ import { ScrollReveal, StaggerContainer, StaggerItem } from '../components/Anima
 import PhoneMockup from '../components/PhoneMockup'
 import WhatsAppDemo from '../components/WhatsAppDemo'
 import { useLanguage, LANGUAGES } from '../utils/LanguageContext'
+import DatabaseWithRestApi from '../components/ui/database-with-rest-api'
 
 /* ──────────────── COMPONENT ──────────────── */
 
@@ -598,6 +599,34 @@ export default function Landing() {
                   ))}
                 </div>
               </div>
+            </div>
+
+            {/* Flow Arrow */}
+            <div className="flex items-center justify-center my-6">
+              <div className="flex items-center gap-3 text-white/30">
+                <div className="w-20 h-px bg-gradient-to-r from-transparent to-white/20" />
+                <ArrowDown className="w-5 h-5 text-[#F97316]" />
+                <div className="w-20 h-px bg-gradient-to-l from-transparent to-white/20" />
+              </div>
+            </div>
+
+            {/* REST API Data Flow Visualization */}
+            <div className="flex justify-center my-4">
+              <DatabaseWithRestApi
+                circleText="API"
+                badgeTexts={{
+                  first: 'GET',
+                  second: 'POST',
+                  third: 'PUT',
+                  fourth: 'DELETE',
+                }}
+                buttonTexts={{
+                  first: 'Bedrock',
+                  second: 'DynamoDB',
+                }}
+                title="Data exchange using a customized REST API"
+                lightColor="#F97316"
+              />
             </div>
 
             {/* Flow Arrow */}
