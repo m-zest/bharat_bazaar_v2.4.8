@@ -5,11 +5,65 @@ import {
   IndianRupee, Languages, MessageSquareText, Package, MessageCircle,
   ClipboardList, ShoppingCart, Truck, Receipt, Eye, GitCompare, Bell,
   BarChart3, Users, BookOpen, Camera, ArrowRight, Check, Star, TrendingUp,
-  Sparkles,
+  Sparkles, Lock, RefreshCw, ChevronLeft, ChevronRight, Search,
 } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./card"
 import { BorderBeam } from "./border-beam"
+
+/* ─── Browser Window Mockup ─── */
+
+const BrowserFrame = ({ children }: { children: React.ReactNode }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 30 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.6 }}
+    className="relative rounded-xl overflow-hidden shadow-2xl shadow-black/20 border border-gray-200/80"
+  >
+    {/* Title Bar */}
+    <div className="bg-[#e8e8e8] px-4 py-2.5 flex items-center gap-3 border-b border-gray-300/60">
+      {/* Traffic lights */}
+      <div className="flex items-center gap-1.5">
+        <div className="w-3 h-3 rounded-full bg-[#ff5f57] border border-[#e0443e]" />
+        <div className="w-3 h-3 rounded-full bg-[#febc2e] border border-[#d4a528]" />
+        <div className="w-3 h-3 rounded-full bg-[#28c840] border border-[#24a938]" />
+      </div>
+
+      {/* Navigation buttons */}
+      <div className="flex items-center gap-1 ml-2">
+        <div className="p-0.5 rounded hover:bg-gray-300/60 text-gray-400">
+          <ChevronLeft className="w-3.5 h-3.5" />
+        </div>
+        <div className="p-0.5 rounded hover:bg-gray-300/60 text-gray-400">
+          <ChevronRight className="w-3.5 h-3.5" />
+        </div>
+      </div>
+
+      {/* URL Bar */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 w-full max-w-md border border-gray-200/80 shadow-sm">
+          <Lock className="w-3 h-3 text-gray-400" />
+          <span className="text-[11px] text-gray-500 flex-1 text-center font-medium">
+            bharatbazaar.ai/platform
+          </span>
+          <RefreshCw className="w-3 h-3 text-gray-400" />
+        </div>
+      </div>
+
+      {/* Right side placeholder */}
+      <div className="flex items-center gap-2">
+        <div className="w-5 h-5 rounded bg-gray-300/60" />
+        <div className="w-5 h-5 rounded bg-gray-300/60" />
+      </div>
+    </div>
+
+    {/* Browser Content */}
+    <div className="bg-white max-h-[700px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+      {children}
+    </div>
+  </motion.div>
+)
 
 /* ─── Mini UI Mockups ─── */
 
@@ -387,61 +441,66 @@ export function Hero195() {
           </p>
         </motion.div>
 
-        {/* Tabbed Feature Showcase */}
-        <Tabs defaultValue="ai" className="w-full">
-          <div className="flex justify-center mb-10">
-            <TabsList className="bg-gray-100 p-1 rounded-full h-auto flex-wrap gap-1">
+        {/* Tabbed Feature Showcase inside Browser Frame */}
+        <BrowserFrame>
+          <div className="px-6 py-8 lg:px-10">
+            <Tabs defaultValue="ai" className="w-full">
+              <div className="flex justify-center mb-8">
+                <TabsList className="bg-gray-100 p-1 rounded-full h-auto flex-wrap gap-1">
+                  {TABS.map(tab => (
+                    <TabsTrigger
+                      key={tab.id}
+                      value={tab.id}
+                      className="rounded-full px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-[#1a1a1a] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all flex items-center gap-2"
+                    >
+                      <tab.icon className="w-4 h-4" />
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+
               {TABS.map(tab => (
-                <TabsTrigger
-                  key={tab.id}
-                  value={tab.id}
-                  className="rounded-full px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-[#1a1a1a] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all flex items-center gap-2"
-                >
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
-                </TabsTrigger>
+                <TabsContent key={tab.id} value={tab.id}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="grid md:grid-cols-2 lg:grid-cols-4 gap-5"
+                  >
+                    {tab.features.map((feature, i) => (
+                      <FeatureCard key={feature.title} feature={feature} index={i} />
+                    ))}
+                  </motion.div>
+                </TabsContent>
               ))}
-            </TabsList>
+            </Tabs>
+
+            {/* Stats row inside browser */}
+            <div className="mt-8 pt-6 border-t border-gray-100 flex items-center gap-8 flex-wrap justify-center">
+              {[
+                { value: '18', label: 'Features' },
+                { value: '7', label: 'AI Models' },
+                { value: '14', label: 'API Endpoints' },
+                { value: '6', label: 'Languages' },
+                { value: '10', label: 'Cities' },
+              ].map(stat => (
+                <div key={stat.label} className="text-center">
+                  <p className="text-2xl font-extrabold text-[#1a1a1a]">{stat.value}</p>
+                  <p className="text-[10px] text-[#999] font-medium uppercase tracking-wider">{stat.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
+        </BrowserFrame>
 
-          {TABS.map(tab => (
-            <TabsContent key={tab.id} value={tab.id}>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="grid md:grid-cols-2 lg:grid-cols-4 gap-5"
-              >
-                {tab.features.map((feature, i) => (
-                  <FeatureCard key={feature.title} feature={feature} index={i} />
-                ))}
-              </motion.div>
-            </TabsContent>
-          ))}
-        </Tabs>
-
-        {/* Bottom Stats + CTA */}
+        {/* CTA below browser */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-14 flex flex-col items-center"
+          className="mt-10 flex flex-col items-center"
         >
-          <div className="flex items-center gap-8 mb-8 flex-wrap justify-center">
-            {[
-              { value: '18', label: 'Features' },
-              { value: '7', label: 'AI Models' },
-              { value: '14', label: 'API Endpoints' },
-              { value: '6', label: 'Languages' },
-              { value: '10', label: 'Cities' },
-            ].map(stat => (
-              <div key={stat.label} className="text-center">
-                <p className="text-2xl font-extrabold text-[#1a1a1a]">{stat.value}</p>
-                <p className="text-[10px] text-[#999] font-medium uppercase tracking-wider">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
