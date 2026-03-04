@@ -11,6 +11,11 @@ const DEMO_PRODUCTS = [
   { name: 'Premium Basmati Rice 5kg', category: 'Groceries', costPrice: 320, currentPrice: 449 },
   { name: 'Handloom Cotton Kurta - Men', category: 'Fashion', costPrice: 450, currentPrice: 899 },
   { name: 'Wireless Bluetooth Earbuds', category: 'Electronics', costPrice: 600, currentPrice: 1299 },
+  { name: 'Toor Dal (Arhar) 1kg', category: 'Groceries', costPrice: 120, currentPrice: 175 },
+  { name: 'Cold Pressed Mustard Oil 1L', category: 'Groceries', costPrice: 165, currentPrice: 245 },
+  { name: 'Organic Turmeric Powder 500g', category: 'Groceries', costPrice: 85, currentPrice: 149 },
+  { name: 'Ghee (Pure Desi) 1L', category: 'Groceries', costPrice: 480, currentPrice: 699 },
+  { name: 'Khadi Cotton Saree', category: 'Fashion', costPrice: 650, currentPrice: 1499 },
 ]
 
 const CITIES = ['Lucknow', 'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 'Ahmedabad', 'Pune', 'Jaipur', 'Indore']

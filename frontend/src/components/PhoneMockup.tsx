@@ -123,7 +123,7 @@ export default function PhoneMockup() {
         transition={{ delay: 1.5 }}
         className="absolute -top-2 right-0 z-10 bg-orange-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg shadow-orange-500/30"
       >
-        👆 Try it live!
+        👇 Try it live!
       </motion.div>
 
       {/* Phone frame */}
