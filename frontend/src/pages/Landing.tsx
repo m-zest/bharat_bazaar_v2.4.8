@@ -50,8 +50,8 @@ export default function Landing() {
   const NAV_LINKS = [
     { label: t('nav.features'), href: '#features' },
     { label: t('nav.howItWorks'), href: '#showcase' },
-    { label: 'Platform', href: '#platform' },
-    { label: 'Architecture', href: '#architecture' },
+    { label: t('nav.platform'), href: '#platform' },
+    { label: t('nav.architecture'), href: '#architecture' },
   ]
 
   const FEATURE_CARDS = [
@@ -118,12 +118,12 @@ export default function Landing() {
 
   // ── Order Flow Steps ──
   const ORDER_FLOW = [
-    { step: 1, title: 'AI Price Check', desc: 'Get AI-powered pricing with margins & festival trends', icon: IndianRupee, color: 'bg-orange-500' },
-    { step: 2, title: 'Browse & Source', desc: 'Explore wholesale products from 10+ Indian cities', icon: Package, color: 'bg-teal-500' },
-    { step: 3, title: 'Smart Cart', desc: 'Compare wholesale vs MRP, auto quantity suggestions', icon: ShoppingCart, color: 'bg-blue-500' },
-    { step: 4, title: 'Secure Checkout', desc: 'Address, COD/UPI payment, GST invoice auto-generated', icon: Lock, color: 'bg-purple-500' },
-    { step: 5, title: 'Live Tracking', desc: 'Real-time 6-step delivery tracking with agent details', icon: Truck, color: 'bg-green-500' },
-    { step: 6, title: 'Khata & Reorder', desc: 'Customer ledger, order history, one-click repeat orders', icon: Receipt, color: 'bg-rose-500' },
+    { step: 1, title: t('orderFlow.step1'), desc: t('orderFlow.step1Desc'), icon: IndianRupee, color: 'bg-orange-500' },
+    { step: 2, title: t('orderFlow.step2'), desc: t('orderFlow.step2Desc'), icon: Package, color: 'bg-teal-500' },
+    { step: 3, title: t('orderFlow.step3'), desc: t('orderFlow.step3Desc'), icon: ShoppingCart, color: 'bg-blue-500' },
+    { step: 4, title: t('orderFlow.step4'), desc: t('orderFlow.step4Desc'), icon: Lock, color: 'bg-purple-500' },
+    { step: 5, title: t('orderFlow.step5'), desc: t('orderFlow.step5Desc'), icon: Truck, color: 'bg-green-500' },
+    { step: 6, title: t('orderFlow.step6'), desc: t('orderFlow.step6Desc'), icon: Receipt, color: 'bg-rose-500' },
   ]
 
   // ── AWS Architecture ──
@@ -233,7 +233,7 @@ export default function Landing() {
       </motion.header>
 
       {/* ═══ HERO ═══ */}
-      <section className="relative min-h-screen flex items-center pt-24 overflow-hidden">
+      <section className="relative min-h-screen flex items-center pt-20 md:pt-24 overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[#0c0c0d]" />
           <div className="absolute top-0 right-0 w-[800px] h-[800px] opacity-40">
@@ -252,24 +252,14 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 w-full">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <ScrollReveal>
-                <motion.div
-                  whileHover={{ scale: 1.03 }}
-                  className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium text-gray-300 mb-6 border border-orange-500/20 shadow-sm"
-                >
-                  <Sparkles className="w-4 h-4 text-[#F97316]" />
-                  {t('hero.badge')}
-                </motion.div>
-              </ScrollReveal>
-
-              <motion.h1 className="text-[3.5rem] md:text-[4.5rem] lg:text-[5.5rem] font-extrabold text-gray-100 leading-[0.95] tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              <motion.h1 className="text-[2.8rem] md:text-[4rem] lg:text-[5rem] font-extrabold text-gray-100 leading-[0.95] tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
                 <motion.span initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="block" style={{ fontWeight: 900 }}>
                   {t('hero.title1')}
                 </motion.span>
                 <motion.span initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.35 }} className="block bg-gradient-to-r from-[#F97316] to-[#F59E0B] bg-clip-text text-transparent" style={{ fontWeight: 300 }}>
                   {t('hero.title2')}
                 </motion.span>
-                <motion.span initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }} className="block text-[2rem] md:text-[2.8rem] lg:text-[3.2rem] text-gray-400 font-bold mt-2">
+                <motion.span initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }} className="block text-[1.5rem] md:text-[2.4rem] lg:text-[2.8rem] text-gray-400 font-bold mt-2">
                   {t('hero.title3')}
                 </motion.span>
               </motion.h1>
@@ -279,36 +269,44 @@ export default function Landing() {
                 {t('hero.tagline')}
               </motion.p>
 
-              <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.6 }} className="mt-6 text-lg text-gray-400 max-w-lg leading-relaxed">
+              <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.6 }} className="mt-6 text-base md:text-lg text-gray-400 max-w-lg leading-relaxed">
                 {t('hero.desc')}
               </motion.p>
 
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.8 }} className="mt-8 flex flex-wrap items-center gap-3">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.8 }} className="mt-6 md:mt-8 flex flex-wrap items-center gap-3">
                 <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => navigate('/login')}
-                  className="flex items-center gap-2.5 bg-orange-500 text-white px-7 py-3.5 rounded-full text-sm font-semibold hover:bg-orange-600 transition-colors shadow-xl shadow-orange-500/20">
+                  className="flex items-center gap-2.5 bg-orange-500 text-white px-6 py-3 md:px-7 md:py-3.5 rounded-full text-sm font-semibold hover:bg-orange-600 transition-colors shadow-xl shadow-orange-500/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-white" />
                   {t('hero.exploreDemo')}
                   <ArrowRight className="w-4 h-4" />
                 </motion.button>
                 <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => navigate('/login')}
-                  className="flex items-center gap-2 text-gray-200 px-6 py-3.5 rounded-full text-sm font-semibold border border-[#333] hover:border-orange-500/50 transition-colors">
+                  className="flex items-center gap-2 text-gray-200 px-5 py-3 md:px-6 md:py-3.5 rounded-full text-sm font-semibold border border-[#333] hover:border-orange-500/50 transition-colors">
                   <MessageCircle className="w-4 h-4" />
                   {t('hero.askAI')}
                 </motion.button>
               </motion.div>
 
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 1 }} className="mt-12 flex items-center gap-8">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 1 }} className="mt-8 md:mt-12 flex items-center gap-4 md:gap-8 flex-wrap">
                 {[
-                  { value: '18+', label: 'AI Features' },
+                  { value: '18+', label: t('hero.stat1Label') },
                   { value: '10', label: t('hero.stat2Label') },
-                  { value: '6', label: 'Languages' },
-                  { value: '100%', label: 'Serverless' },
+                  { value: '6', label: t('hero.stat3Label') },
                 ].map((stat) => (
                   <div key={stat.label}>
-                    <p className="text-2xl font-extrabold text-gray-100">{stat.value}</p>
-                    <p className="text-xs text-gray-500 font-medium mt-0.5">{stat.label}</p>
+                    <p className="text-xl md:text-2xl font-extrabold text-gray-100">{stat.value}</p>
+                    <p className="text-[10px] md:text-xs text-gray-500 font-medium mt-0.5">{stat.label}</p>
                   </div>
                 ))}
+                <ScrollReveal>
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium text-gray-400 border border-orange-500/20"
+                  >
+                    <Sparkles className="w-3 h-3 text-[#F97316]" />
+                    {t('hero.badge')}
+                  </motion.div>
+                </ScrollReveal>
               </motion.div>
             </div>
 
@@ -316,7 +314,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
-              className="hidden lg:flex justify-center items-start pt-24"
+              className="flex justify-center items-start pt-8 lg:pt-24"
             >
               <PhoneMockup />
             </motion.div>
@@ -338,12 +336,12 @@ export default function Landing() {
       <section className="py-24 px-6 lg:px-8 bg-[#111113]">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-14">
-            <p className="text-sm font-semibold text-[#F97316] uppercase tracking-wider mb-2">End-to-End Commerce</p>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-100 tracking-tight">
-              End-to-End Commerce Flow
+            <p className="text-sm font-semibold text-[#F97316] uppercase tracking-wider mb-2">{t('orderFlow.subtitle')}</p>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-100 tracking-tight">
+              {t('orderFlow.title')}
             </h2>
-            <p className="text-gray-400 mt-4 text-lg max-w-2xl mx-auto">
-              From AI-powered pricing to delivery tracking & customer ledger — a complete B2B commerce experience for Indian retailers.
+            <p className="text-gray-400 mt-4 text-base md:text-lg max-w-2xl mx-auto">
+              {t('orderFlow.desc')}
             </p>
           </ScrollReveal>
 
@@ -385,7 +383,7 @@ export default function Landing() {
             <ScrollReveal>
               <div>
                 <p className="text-sm font-semibold text-[#F97316] uppercase tracking-wider mb-2">{t('features.subtitle')}</p>
-                <h2 className="text-4xl md:text-5xl font-extrabold text-gray-100 tracking-tight whitespace-pre-line">
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-100 tracking-tight whitespace-pre-line">
                   {t('features.title')}
                 </h2>
               </div>
@@ -432,15 +430,15 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="mb-12">
             <p className="text-sm font-semibold text-[#F97316] uppercase tracking-wider mb-2">{t('showcase.subtitle')}</p>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-100 tracking-tight whitespace-pre-line">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-100 tracking-tight whitespace-pre-line">
               {t('showcase.title')}
             </h2>
           </ScrollReveal>
 
-          <div className="flex items-center gap-1 mb-10 bg-white/5 rounded-full p-1 w-fit border border-[#2a2a2d]">
+          <div className="flex items-center gap-1 mb-10 bg-white/5 rounded-full p-1 w-fit border border-[#2a2a2d] overflow-x-auto max-w-full">
             {SHOWCASE_TABS.map(tab => (
               <motion.button key={tab.id} onClick={() => setActiveTab(tab.id)} whileTap={{ scale: 0.97 }}
-                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
+                className={`px-4 md:px-6 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-semibold transition-all whitespace-nowrap ${
                   activeTab === tab.id ? 'bg-orange-500 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
                 }`}>
                 {tab.label}
@@ -490,12 +488,12 @@ export default function Landing() {
       <section id="architecture" className="py-24 px-6 lg:px-8 bg-[#1a1a1a] text-white">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-14">
-            <p className="text-sm font-semibold text-[#F97316] uppercase tracking-wider mb-2">Built on AWS</p>
-            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-              Production-Grade Architecture
+            <p className="text-sm font-semibold text-[#F97316] uppercase tracking-wider mb-2">{t('arch.subtitle')}</p>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight">
+              {t('arch.title')}
             </h2>
-            <p className="text-white/50 mt-4 text-lg max-w-2xl mx-auto">
-              Containerized on AWS App Runner with Amazon Bedrock AI, single-table DynamoDB, and 4-tier model fallback chain.
+            <p className="text-white/50 mt-4 text-base md:text-lg max-w-2xl mx-auto">
+              {t('arch.desc')}
             </p>
           </ScrollReveal>
 
@@ -629,18 +627,18 @@ export default function Landing() {
       <section className="py-24 px-6 lg:px-8 bg-[#0c0c0d]">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-14">
-            <p className="text-sm font-semibold text-[#F97316] uppercase tracking-wider mb-2">Built for Bharat</p>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-100 tracking-tight">
-              Designed for 12M+ Indian SMBs
+            <p className="text-sm font-semibold text-[#F97316] uppercase tracking-wider mb-2">{t('impact.subtitle')}</p>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-100 tracking-tight">
+              {t('impact.title')}
             </h2>
           </ScrollReveal>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { value: '10', label: 'Indian Cities', desc: 'Mumbai, Delhi, Bangalore, Lucknow, Chennai, Kolkata, Ahmedabad, Pune, Jaipur, Indore', icon: MapPin },
-              { value: '6', label: 'Languages', desc: 'English, Hindi, Tamil, Bengali, Gujarati, Marathi — culturally adapted', icon: Globe },
-              { value: '130+', label: 'Wholesale Products', desc: 'Groceries, Fashion, Electronics, Beauty, Home & Kitchen categories', icon: Package },
-              { value: '40+', label: 'Verified Suppliers', desc: 'Rated wholesalers with MOQ, delivery days, and specialties', icon: Shield },
+              { value: '10', label: t('impact.cities'), desc: t('impact.citiesDesc'), icon: MapPin },
+              { value: '6', label: t('impact.languages'), desc: t('impact.languagesDesc'), icon: Globe },
+              { value: '130+', label: t('impact.products'), desc: t('impact.productsDesc'), icon: Package },
+              { value: '40+', label: t('impact.suppliers'), desc: t('impact.suppliersDesc'), icon: Shield },
             ].map((stat, i) => (
               <ScrollReveal key={stat.label} delay={i * 0.1}>
                 <motion.div whileHover={{ y: -4 }}
@@ -702,7 +700,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-14">
             <p className="text-sm font-semibold text-[#F97316] uppercase tracking-wider mb-2">{t('benefits.subtitle')}</p>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-100 tracking-tight">{t('benefits.title')}</h2>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-100 tracking-tight">{t('benefits.title')}</h2>
             <p className="text-gray-400 mt-4 text-lg max-w-2xl mx-auto">
               {t('benefits.desc')}
             </p>
@@ -732,7 +730,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-14">
             <p className="text-sm font-semibold text-[#F97316] uppercase tracking-wider mb-2">{t('testimonials.subtitle')}</p>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-100 tracking-tight">{t('testimonials.title')}</h2>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-100 tracking-tight">{t('testimonials.title')}</h2>
           </ScrollReveal>
 
           <div className="grid lg:grid-cols-2 gap-6">
@@ -777,7 +775,7 @@ export default function Landing() {
           </div>
           <div className="max-w-3xl mx-auto text-center relative z-10">
             <ScrollReveal>
-              <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight whitespace-pre-line">{t('cta.title')}</h2>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight whitespace-pre-line">{t('cta.title')}</h2>
               <p className="text-white/80 mt-4 text-lg">{t('cta.desc')}</p>
             </ScrollReveal>
             <ScrollReveal delay={0.2}>
@@ -785,7 +783,7 @@ export default function Landing() {
                 <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => navigate('/login')}
                   className="bg-[#1a1a1a] text-white px-8 py-4 rounded-full text-sm font-semibold shadow-xl shadow-black/20 whitespace-nowrap flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#F97316] animate-pulse" />
-                  Explore Live Demo
+                  {t('cta.exploreLive')}
                   <ArrowRight className="w-4 h-4" />
                 </motion.button>
               </div>

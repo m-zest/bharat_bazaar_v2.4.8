@@ -9,6 +9,9 @@ const PRODUCTS_TO_MONITOR = [
   { name: 'Premium Basmati Rice 5kg', category: 'Groceries', yourPrice: 449, costPrice: 320 },
   { name: 'Handloom Cotton Kurta - Men', category: 'Fashion', yourPrice: 899, costPrice: 450 },
   { name: 'Wireless Bluetooth Earbuds', category: 'Electronics', yourPrice: 1299, costPrice: 600 },
+  { name: 'Toor Dal (Arhar) 1kg', category: 'Groceries', yourPrice: 175, costPrice: 120 },
+  { name: 'Ghee (Pure Desi) 1L', category: 'Groceries', yourPrice: 699, costPrice: 480 },
+  { name: 'Organic Turmeric Powder 500g', category: 'Groceries', yourPrice: 149, costPrice: 85 },
 ]
 
 export default function CompetitorPage() {
