@@ -274,6 +274,42 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
+      {/* ═══ MY STORE — What This Shop Sells ═══ */}
+      {(() => {
+        const ob = getOnboardingData()
+        return ob && ob.products && ob.products.length > 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-[#1a1a1d] rounded-xl p-4 border border-[#2a2a2d] mb-4"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-saffron-500" />
+                My Store Catalog — {ob.category}
+                <span className="text-[9px] text-gray-500 ml-1">({ob.products.length} products selected during setup)</span>
+              </h3>
+              <Link to="/inventory" className="text-[9px] text-orange-400 font-medium hover:text-orange-300 flex items-center gap-1">
+                View Inventory <ArrowRight className="w-2.5 h-2.5" />
+              </Link>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {ob.products.map((p: string) => (
+                <span key={p} className="text-[10px] px-2.5 py-1 rounded-lg bg-saffron-500/10 text-saffron-400 font-medium border border-saffron-500/20">
+                  {p}
+                </span>
+              ))}
+              <span className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] text-gray-500 font-medium">
+                + common items auto-added
+              </span>
+            </div>
+            <p className="text-[9px] text-gray-600 mt-2">
+              These products seed your inventory, pricing AI, and demand forecasts. Add more via Bill Scanner or Sourcing.
+            </p>
+          </motion.div>
+        ) : null
+      })()}
+
       {/* ═══ DATA FLOW DEMO — For Judges ═══ */}
       <div className="grid lg:grid-cols-5 gap-3 mb-4">
         {/* Live Data Flow Activity — 3 cols */}
