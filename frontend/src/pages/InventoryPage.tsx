@@ -3,7 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Package, Plus, Trash2, AlertTriangle, TrendingDown, ShoppingCart, Edit2, Check, X, RefreshCw, Loader2, Camera, FileText, MessageCircle, Truck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '../utils/api'
+import { useSales } from '../utils/SalesContext'
 import { useToast } from '../components/Toast'
+import { getOnboardingData } from '../components/OnboardingModal'
+import { buildInventoryFromOnboarding } from '../utils/productCatalog'
 
 interface InventoryItem {
   id: string
@@ -25,23 +28,45 @@ const SOURCE_CONFIG = {
   whatsapp: { label: 'WhatsApp', icon: MessageCircle, color: 'text-green-400', bg: 'bg-green-500/10' },
 }
 
-const DEMO_INVENTORY: InventoryItem[] = [
-  { id: 'demo-1', name: 'Toor Dal (1kg)', category: 'Groceries', costPrice: 120, sellingPrice: 155, quantity: 45, dailySellRate: 5, reorderLevel: 15, lastUpdated: new Date().toISOString(), source: 'bill_scan' },
-  { id: 'demo-2', name: 'Basmati Rice (5kg)', category: 'Groceries', costPrice: 280, sellingPrice: 380, quantity: 22, dailySellRate: 3, reorderLevel: 10, lastUpdated: new Date().toISOString(), source: 'wholesale' },
-  { id: 'demo-3', name: 'Surf Excel (1kg)', category: 'Home & Kitchen', costPrice: 180, sellingPrice: 220, quantity: 8, dailySellRate: 4, reorderLevel: 12, lastUpdated: new Date().toISOString(), source: 'bill_scan' },
-  { id: 'demo-4', name: 'Parle-G Biscuit (Pack of 12)', category: 'Groceries', costPrice: 60, sellingPrice: 84, quantity: 5, dailySellRate: 6, reorderLevel: 20, lastUpdated: new Date().toISOString(), source: 'whatsapp' },
-  { id: 'demo-5', name: 'Sugar (5kg)', category: 'Groceries', costPrice: 195, sellingPrice: 250, quantity: 35, dailySellRate: 4, reorderLevel: 10, lastUpdated: new Date().toISOString(), source: 'wholesale' },
-  { id: 'demo-6', name: 'Amul Butter (500g)', category: 'Groceries', costPrice: 220, sellingPrice: 275, quantity: 12, dailySellRate: 3, reorderLevel: 8, lastUpdated: new Date().toISOString(), source: 'bill_scan' },
-  { id: 'demo-7', name: 'Vim Dishwash Bar (3 pack)', category: 'Home & Kitchen', costPrice: 55, sellingPrice: 72, quantity: 18, dailySellRate: 2, reorderLevel: 8, lastUpdated: new Date().toISOString(), source: 'manual' },
-  { id: 'demo-8', name: 'Maggi Noodles (Family Pack)', category: 'Groceries', costPrice: 96, sellingPrice: 120, quantity: 0, dailySellRate: 8, reorderLevel: 15, lastUpdated: new Date().toISOString(), source: 'whatsapp' },
-  { id: 'demo-9', name: 'Clinic Plus Shampoo (340ml)', category: 'Beauty & Personal Care', costPrice: 155, sellingPrice: 199, quantity: 14, dailySellRate: 1, reorderLevel: 5, lastUpdated: new Date().toISOString(), source: 'bill_scan' },
-  { id: 'demo-10', name: 'Fortune Sunflower Oil (1L)', category: 'Groceries', costPrice: 130, sellingPrice: 165, quantity: 28, dailySellRate: 3, reorderLevel: 10, lastUpdated: new Date().toISOString(), source: 'wholesale' },
-  { id: 'demo-11', name: 'Colgate MaxFresh (150g)', category: 'Beauty & Personal Care', costPrice: 85, sellingPrice: 110, quantity: 20, dailySellRate: 2, reorderLevel: 8, lastUpdated: new Date().toISOString(), source: 'manual' },
-  { id: 'demo-12', name: 'Britannia Good Day (Pack of 8)', category: 'Groceries', costPrice: 70, sellingPrice: 96, quantity: 3, dailySellRate: 5, reorderLevel: 15, lastUpdated: new Date().toISOString(), source: 'bill_scan' },
-]
+// Build demo inventory from onboarding selections (personalized) or fallback to defaults
+function getDemoInventory(): InventoryItem[] {
+  const onboarding = getOnboardingData()
+  if (onboarding && onboarding.products && onboarding.products.length > 0) {
+    // Personalized: use what the store owner said they sell
+    return buildInventoryFromOnboarding(onboarding.products, onboarding.category).map(p => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      costPrice: p.costPrice,
+      sellingPrice: p.sellingPrice,
+      quantity: p.defaultQuantity,
+      dailySellRate: p.dailySellRate,
+      reorderLevel: p.reorderLevel,
+      lastUpdated: new Date().toISOString(),
+      source: p.source as InventoryItem['source'],
+    }))
+  }
+
+  // Fallback: default groceries store
+  return [
+    { id: 'demo-1', name: 'Toor Dal (1kg)', category: 'Groceries', costPrice: 120, sellingPrice: 155, quantity: 45, dailySellRate: 5, reorderLevel: 15, lastUpdated: new Date().toISOString(), source: 'bill_scan' },
+    { id: 'demo-2', name: 'Basmati Rice (5kg)', category: 'Groceries', costPrice: 280, sellingPrice: 380, quantity: 22, dailySellRate: 3, reorderLevel: 10, lastUpdated: new Date().toISOString(), source: 'wholesale' },
+    { id: 'demo-3', name: 'Surf Excel (1kg)', category: 'Home & Kitchen', costPrice: 180, sellingPrice: 220, quantity: 8, dailySellRate: 4, reorderLevel: 12, lastUpdated: new Date().toISOString(), source: 'bill_scan' },
+    { id: 'demo-4', name: 'Parle-G Biscuit (Pack of 12)', category: 'Groceries', costPrice: 60, sellingPrice: 84, quantity: 5, dailySellRate: 6, reorderLevel: 20, lastUpdated: new Date().toISOString(), source: 'whatsapp' },
+    { id: 'demo-5', name: 'Sugar (5kg)', category: 'Groceries', costPrice: 195, sellingPrice: 250, quantity: 35, dailySellRate: 4, reorderLevel: 10, lastUpdated: new Date().toISOString(), source: 'wholesale' },
+    { id: 'demo-6', name: 'Amul Butter (500g)', category: 'Groceries', costPrice: 220, sellingPrice: 275, quantity: 12, dailySellRate: 3, reorderLevel: 8, lastUpdated: new Date().toISOString(), source: 'bill_scan' },
+    { id: 'demo-7', name: 'Vim Dishwash Bar (3 pack)', category: 'Home & Kitchen', costPrice: 55, sellingPrice: 72, quantity: 18, dailySellRate: 2, reorderLevel: 8, lastUpdated: new Date().toISOString(), source: 'manual' },
+    { id: 'demo-8', name: 'Maggi Noodles (Family Pack)', category: 'Groceries', costPrice: 96, sellingPrice: 120, quantity: 0, dailySellRate: 8, reorderLevel: 15, lastUpdated: new Date().toISOString(), source: 'whatsapp' },
+    { id: 'demo-9', name: 'Clinic Plus Shampoo (340ml)', category: 'Beauty & Personal Care', costPrice: 155, sellingPrice: 199, quantity: 14, dailySellRate: 1, reorderLevel: 5, lastUpdated: new Date().toISOString(), source: 'bill_scan' },
+    { id: 'demo-10', name: 'Fortune Sunflower Oil (1L)', category: 'Groceries', costPrice: 130, sellingPrice: 165, quantity: 28, dailySellRate: 3, reorderLevel: 10, lastUpdated: new Date().toISOString(), source: 'wholesale' },
+    { id: 'demo-11', name: 'Colgate MaxFresh (150g)', category: 'Beauty & Personal Care', costPrice: 85, sellingPrice: 110, quantity: 20, dailySellRate: 2, reorderLevel: 8, lastUpdated: new Date().toISOString(), source: 'manual' },
+    { id: 'demo-12', name: 'Britannia Good Day (Pack of 8)', category: 'Groceries', costPrice: 70, sellingPrice: 96, quantity: 3, dailySellRate: 5, reorderLevel: 15, lastUpdated: new Date().toISOString(), source: 'bill_scan' },
+  ]
+}
 
 export default function InventoryPage() {
   const { toast } = useToast()
+  const { getItemSoldCount } = useSales()
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -57,10 +82,10 @@ export default function InventoryPage() {
       setError(null)
       const data = await api.getInventory()
       const items = data.items || []
-      setInventory(items.length > 0 ? items : DEMO_INVENTORY)
+      setInventory(items.length > 0 ? items : getDemoInventory())
     } catch (err: any) {
       // Fallback to demo data on error
-      setInventory(DEMO_INVENTORY)
+      setInventory(getDemoInventory())
     } finally {
       setLoading(false)
     }
@@ -292,6 +317,8 @@ export default function InventoryPage() {
               <th className="text-center py-3 px-4 text-gray-500 font-medium">Quantity</th>
               <th className="text-center py-3 px-4 text-gray-500 font-medium">Daily Rate</th>
               <th className="text-center py-3 px-4 text-gray-500 font-medium">Days Left</th>
+              <th className="text-center py-3 px-4 text-gray-500 font-medium">Sold Today</th>
+              <th className="text-center py-3 px-4 text-gray-500 font-medium">Sold/Week</th>
               <th className="text-center py-3 px-4 text-gray-500 font-medium">Status</th>
               <th className="text-center py-3 px-4 text-gray-500 font-medium">Actions</th>
             </tr>
@@ -299,7 +326,7 @@ export default function InventoryPage() {
           <tbody>
             {inventory.length === 0 ? (
               <tr>
-                <td colSpan={10} className="text-center py-12 text-gray-400">
+                <td colSpan={12} className="text-center py-12 text-gray-400">
                   <Package className="w-10 h-10 mx-auto mb-2 opacity-50" />
                   <p>No inventory items yet. Add your first product above.</p>
                 </td>
@@ -351,6 +378,22 @@ export default function InventoryPage() {
                     <span className={`font-medium ${daysLeft <= 3 ? 'text-red-400' : daysLeft <= 7 ? 'text-yellow-400' : 'text-green-400'}`}>
                       {daysLeft < 999 ? `${daysLeft}d` : '—'}
                     </span>
+                  </td>
+                  <td className="text-center py-3 px-4">
+                    {(() => {
+                      const sold = getItemSoldCount(item.name, 'today')
+                      return sold > 0
+                        ? <span className="text-xs font-bold text-green-400">{sold}</span>
+                        : <span className="text-xs text-gray-600">—</span>
+                    })()}
+                  </td>
+                  <td className="text-center py-3 px-4">
+                    {(() => {
+                      const sold = getItemSoldCount(item.name, 'week')
+                      return sold > 0
+                        ? <span className="text-xs font-bold text-saffron-400">{sold}</span>
+                        : <span className="text-xs text-gray-600">—</span>
+                    })()}
                   </td>
                   <td className="text-center py-3 px-4">
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${status.color}`}>{status.label}</span>
