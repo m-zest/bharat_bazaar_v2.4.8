@@ -19,6 +19,24 @@ const DEMO_PRODUCTS = [
     features: ['Pure cotton handloom', 'Chikankari embroidery', 'Comfortable fit', 'Machine washable', 'Available in 5 colors'],
     specifications: { fabric: '100% Cotton', type: 'Chikankari', sizes: 'S, M, L, XL, XXL', origin: 'Lucknow' },
   },
+  {
+    name: 'Organic Turmeric Powder 500g',
+    category: 'Groceries',
+    features: ['Organic certified', 'High curcumin 7.5%', 'Lakadong variety', 'Lab tested', 'No artificial color'],
+    specifications: { weight: '500g', curcumin: '7.5%', type: 'Lakadong', origin: 'Meghalaya' },
+  },
+  {
+    name: 'Ghee (Pure Desi) 1L',
+    category: 'Groceries',
+    features: ['A2 cow milk', 'Bilona method', 'Rich aroma', 'No preservatives', 'Grass-fed cows'],
+    specifications: { volume: '1 litre', type: 'A2 Bilona', fat: '99.7%', origin: 'Gujarat' },
+  },
+  {
+    name: 'Neem Wood Comb Set',
+    category: 'Home & Kitchen',
+    features: ['100% Neem wood', 'Anti-dandruff', 'Anti-static', 'Eco-friendly', 'Set of 3 sizes'],
+    specifications: { material: 'Neem Wood', pieces: '3', type: 'Wide + Fine + Pocket', origin: 'Rajasthan' },
+  },
 ]
 
 const LANGUAGES = [
