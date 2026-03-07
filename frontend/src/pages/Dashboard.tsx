@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [weather, setWeather] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(() => !isOnboarded())
+  const [demoTab, setDemoTab] = useState<'retailer' | 'supplier' | 'customer'>('retailer')
   const [selectedCity, setSelectedCity] = useState(() => {
     const saved = getOnboardingData()
     return saved?.city || 'Lucknow'
@@ -273,6 +274,281 @@ export default function Dashboard() {
           </Link>
         </motion.div>
       </div>
+
+      {/* ═══ PLATFORM PROTOTYPE DEMO — 3 Dashboards ═══ */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-[#1a1a1d] rounded-xl border border-[#2a2a2d] mb-4 overflow-hidden"
+      >
+        <div className="flex items-center justify-between p-4 pb-0">
+          <div>
+            <h3 className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-saffron-500" />
+              Platform Prototype — 3 Dashboard Views
+            </h3>
+            <p className="text-[9px] text-gray-600 mt-0.5">Each user type gets a personalized experience</p>
+          </div>
+          <div className="flex items-center gap-1">
+            {([
+              { key: 'retailer' as const, label: '🏪 Retailer' },
+              { key: 'supplier' as const, label: '🚚 Supplier' },
+              { key: 'customer' as const, label: '🛒 Customer' },
+            ]).map(tab => (
+              <button key={tab.key} onClick={() => setDemoTab(tab.key)}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${
+                  demoTab === tab.key
+                    ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25'
+                    : 'bg-white/[0.04] text-gray-400 hover:bg-white/[0.08] hover:text-gray-300'
+                }`}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-4">
+          {/* ── RETAILER PROTOTYPE ── */}
+          {demoTab === 'retailer' && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-bold text-gray-100">Rajesh&apos;s Kirana Store</p>
+                  <p className="text-[10px] text-gray-500">Lucknow, UP &middot; Retailer Dashboard</p>
+                </div>
+                <span className="text-[9px] px-2 py-1 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 font-medium">All systems online</span>
+              </div>
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                {[
+                  { label: "Today's Revenue", value: '₹12,850', change: '+18.2%', up: true },
+                  { label: 'Items Sold', value: '47', change: '+12 vs yesterday', up: true },
+                  { label: 'Avg. Margin', value: '28.4%', change: '+3.2% this week', up: true },
+                  { label: 'Active SKUs', value: '156', change: '5 low stock', up: false },
+                ].map(kpi => (
+                  <div key={kpi.label} className="bg-[#111113] rounded-xl p-3 border border-[#2a2a2d]">
+                    <p className="text-[9px] text-gray-500 font-medium">{kpi.label}</p>
+                    <p className="text-lg font-display font-bold text-gray-100 mt-0.5">{kpi.value}</p>
+                    <p className={`text-[8px] font-medium mt-0.5 ${kpi.up ? 'text-green-500' : 'text-amber-500'}`}>{kpi.change}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="col-span-2 bg-[#111113] rounded-xl p-3 border border-[#2a2a2d]">
+                  <p className="text-[10px] font-semibold text-gray-300 mb-2">Top Sellers Today</p>
+                  {[
+                    { name: 'Basmati Rice 5kg', revenue: '₹14,700', pct: 85 },
+                    { name: 'Toor Dal 1kg', revenue: '₹5,250', pct: 70 },
+                    { name: 'Surf Excel 1kg', revenue: '₹5,600', pct: 55 },
+                    { name: 'Amul Butter 500g', revenue: '₹4,400', pct: 44 },
+                  ].map(p => (
+                    <div key={p.name} className="mb-2">
+                      <div className="flex justify-between text-[8px] mb-0.5">
+                        <span className="text-gray-400 font-medium">{p.name}</span>
+                        <span className="text-gray-500 font-mono">{p.revenue}</span>
+                      </div>
+                      <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full" style={{ width: `${p.pct}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-[#111113] rounded-xl p-3 border border-[#2a2a2d]">
+                  <p className="text-[10px] font-semibold text-gray-300 mb-2">AI Pricing — Rice 5kg</p>
+                  {[
+                    { label: 'Economy', price: '₹335', color: 'border-blue-500/20 bg-blue-500/5' },
+                    { label: 'Balanced', price: '₹365', color: 'border-green-500/20 bg-green-500/5 ring-1 ring-green-500/30' },
+                    { label: 'Premium', price: '₹399', color: 'border-violet-500/20 bg-violet-500/5' },
+                  ].map(s => (
+                    <div key={s.label} className={`rounded-lg p-2 border mb-1.5 ${s.color}`}>
+                      <p className="text-[7px] text-gray-500 uppercase font-semibold">{s.label}</p>
+                      <p className="text-sm font-bold text-gray-100 font-mono">{s.price}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-3">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <p className="text-[10px] font-semibold text-amber-400">AI Insights</p>
+                </div>
+                <div className="flex gap-4">
+                  <p className="text-[9px] text-amber-300/70">🌧️ Rain tomorrow — stock +20% Dal &amp; Rice</p>
+                  <p className="text-[9px] text-amber-300/70">📈 Surf Excel trending — consider price increase</p>
+                  <p className="text-[9px] text-amber-300/70">⚠️ Maggi 12-pack: 3 days until stockout</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── SUPPLIER PROTOTYPE ── */}
+          {demoTab === 'supplier' && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-bold text-gray-100">Priya Enterprises</p>
+                  <p className="text-[10px] text-gray-500">Mumbai, MH &middot; Supplier Dashboard</p>
+                </div>
+                <span className="text-[9px] px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">✓ Verified Supplier</span>
+              </div>
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                {[
+                  { label: 'Total Orders', value: '284', change: '+24 today', up: true },
+                  { label: 'Monthly Revenue', value: '₹8.4L', change: '+22% vs last month', up: true },
+                  { label: 'Active Retailers', value: '67', change: '+5 this week', up: true },
+                  { label: 'Products Listed', value: '342', change: '12 low stock', up: false },
+                ].map(kpi => (
+                  <div key={kpi.label} className="bg-[#111113] rounded-xl p-3 border border-[#2a2a2d]">
+                    <p className="text-[9px] text-gray-500 font-medium">{kpi.label}</p>
+                    <p className="text-lg font-display font-bold text-gray-100 mt-0.5">{kpi.value}</p>
+                    <p className={`text-[8px] font-medium mt-0.5 ${kpi.up ? 'text-green-500' : 'text-amber-500'}`}>{kpi.change}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="col-span-2 bg-[#111113] rounded-xl p-3 border border-[#2a2a2d]">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-[10px] font-semibold text-gray-300">Recent Orders</p>
+                    <span className="text-[8px] text-gray-600">Last 24 hours</span>
+                  </div>
+                  {[
+                    { store: 'Rajesh General Store', items: '12 items', total: '₹18,450', status: 'Delivered', sc: 'text-green-500' },
+                    { store: 'Sharma Kirana', items: '8 items', total: '₹12,200', status: 'In Transit', sc: 'text-blue-500' },
+                    { store: 'Gupta Traders', items: '22 items', total: '₹35,800', status: 'Processing', sc: 'text-amber-500' },
+                    { store: 'Patel Corner Shop', items: '6 items', total: '₹7,600', status: 'Delivered', sc: 'text-green-500' },
+                    { store: 'Singh Provisions', items: '15 items', total: '₹24,100', status: 'In Transit', sc: 'text-blue-500' },
+                  ].map(o => (
+                    <div key={o.store} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
+                      <div className="flex-1">
+                        <p className="text-[9px] font-medium text-gray-300">{o.store}</p>
+                        <p className="text-[7px] text-gray-600">{o.items}</p>
+                      </div>
+                      <p className="text-[9px] font-semibold text-gray-400 mx-3 font-mono">{o.total}</p>
+                      <span className={`text-[7px] font-medium ${o.sc}`}>{o.status}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-[#111113] rounded-xl p-3 border border-[#2a2a2d]">
+                  <p className="text-[10px] font-semibold text-gray-300 mb-2">Top Retailers</p>
+                  {[
+                    { name: 'Rajesh General Store', orders: 48, revenue: '₹2.1L' },
+                    { name: 'Gupta Traders', orders: 42, revenue: '₹1.8L' },
+                    { name: 'Sharma Kirana', orders: 36, revenue: '₹1.5L' },
+                    { name: 'Singh Provisions', orders: 31, revenue: '₹1.3L' },
+                    { name: 'Patel Corner Shop', orders: 25, revenue: '₹1.0L' },
+                  ].map((r, i) => (
+                    <div key={r.name} className="flex items-center gap-2 mb-2">
+                      <span className="text-[8px] font-bold text-gray-600 w-4">#{i + 1}</span>
+                      <div className="flex-1">
+                        <p className="text-[8px] font-medium text-gray-400">{r.name}</p>
+                        <p className="text-[7px] text-gray-600">{r.orders} orders</p>
+                      </div>
+                      <p className="text-[8px] font-semibold text-gray-500 font-mono">{r.revenue}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-3">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                  <p className="text-[10px] font-semibold text-blue-400">AI Demand Forecast</p>
+                </div>
+                <div className="flex gap-4">
+                  <p className="text-[9px] text-blue-300/70">📈 Basmati Rice demand +35% next week (festival season)</p>
+                  <p className="text-[9px] text-blue-300/70">🚨 Sugar stock low — 15 retailers awaiting restock</p>
+                  <p className="text-[9px] text-blue-300/70">⭐ 3 new stores in Pune requesting quotes</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── CUSTOMER PROTOTYPE ── */}
+          {demoTab === 'customer' && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-bold text-gray-100">Meera Sharma</p>
+                  <p className="text-[10px] text-gray-500">Bengaluru, KA &middot; Customer Dashboard</p>
+                </div>
+                <span className="text-[9px] px-2 py-1 rounded-lg bg-violet-500/10 text-violet-400 border border-violet-500/20 font-medium">₹2,340 saved this month</span>
+              </div>
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                {[
+                  { label: 'Money Saved', value: '₹2,340', change: 'this month', up: true },
+                  { label: 'Total Orders', value: '23', change: '3 in transit', up: true },
+                  { label: 'Stores Nearby', value: '14', change: '2 new this week', up: true },
+                  { label: 'Active Deals', value: '8', change: '3 expiring soon', up: false },
+                ].map(kpi => (
+                  <div key={kpi.label} className="bg-[#111113] rounded-xl p-3 border border-[#2a2a2d]">
+                    <p className="text-[9px] text-gray-500 font-medium">{kpi.label}</p>
+                    <p className="text-lg font-display font-bold text-gray-100 mt-0.5">{kpi.value}</p>
+                    <p className={`text-[8px] font-medium mt-0.5 ${kpi.up ? 'text-green-500' : 'text-amber-500'}`}>{kpi.change}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="col-span-2 bg-[#111113] rounded-xl p-3 border border-[#2a2a2d]">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-[10px] font-semibold text-gray-300">Price Comparison</p>
+                    <span className="text-[8px] text-gray-600">Best prices near you</span>
+                  </div>
+                  {[
+                    { item: 'Basmati Rice 5kg', stores: [{ name: 'Rajesh Store', price: '₹335', best: true }, { name: 'Gupta Traders', price: '₹355', best: false }, { name: 'Singh Mart', price: '₹360', best: false }] },
+                    { item: 'Toor Dal 1kg', stores: [{ name: 'Sharma Kirana', price: '₹142', best: true }, { name: 'Rajesh Store', price: '₹148', best: false }, { name: 'Patel Shop', price: '₹155', best: false }] },
+                    { item: 'Amul Butter 500g', stores: [{ name: 'Singh Mart', price: '₹195', best: true }, { name: 'Sharma Kirana', price: '₹198', best: false }, { name: 'Gupta Traders', price: '₹205', best: false }] },
+                  ].map(comp => (
+                    <div key={comp.item} className="py-2 border-b border-white/5 last:border-0">
+                      <p className="text-[9px] font-medium text-gray-300 mb-1.5">{comp.item}</p>
+                      <div className="flex gap-2">
+                        {comp.stores.map(s => (
+                          <div key={s.name} className={`flex-1 rounded-lg px-2 py-1.5 border text-center ${
+                            s.best ? 'border-green-500/20 bg-green-500/5' : 'border-white/5 bg-white/[0.02]'
+                          }`}>
+                            <p className="text-[7px] text-gray-500">{s.name}</p>
+                            <p className={`text-[10px] font-bold font-mono ${s.best ? 'text-green-500' : 'text-gray-400'}`}>{s.price}</p>
+                            {s.best && <p className="text-[6px] text-green-500 font-semibold">BEST PRICE</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-[#111113] rounded-xl p-3 border border-[#2a2a2d]">
+                  <p className="text-[10px] font-semibold text-gray-300 mb-2">Nearby Stores</p>
+                  {[
+                    { name: 'Rajesh General Store', dist: '0.3 km', rating: '4.8', deals: 3 },
+                    { name: 'Sharma Kirana', dist: '0.7 km', rating: '4.6', deals: 2 },
+                    { name: 'Singh Mart', dist: '1.1 km', rating: '4.5', deals: 5 },
+                    { name: 'Gupta Traders', dist: '1.4 km', rating: '4.7', deals: 1 },
+                    { name: 'Patel Corner Shop', dist: '1.8 km', rating: '4.3', deals: 4 },
+                  ].map(store => (
+                    <div key={store.name} className="flex items-center gap-2 mb-2">
+                      <div className="w-5 h-5 rounded bg-white/5 flex items-center justify-center">
+                        <MapPin className="w-2.5 h-2.5 text-gray-500" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[8px] font-medium text-gray-400">{store.name}</p>
+                        <p className="text-[7px] text-gray-600">{store.dist} · ⭐ {store.rating}</p>
+                      </div>
+                      <span className="text-[7px] px-1.5 py-0.5 rounded-full bg-orange-500/10 text-orange-400 font-medium">{store.deals} deals</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-violet-500/5 border border-violet-500/10 rounded-xl p-3">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+                  <p className="text-[10px] font-semibold text-violet-400">Smart Suggestions</p>
+                </div>
+                <div className="flex gap-4">
+                  <p className="text-[9px] text-violet-300/70">💰 Save ₹25 on Toor Dal at Sharma Kirana today</p>
+                  <p className="text-[9px] text-violet-300/70">🛒 Your usual Rice order is due — reorder?</p>
+                  <p className="text-[9px] text-violet-300/70">🎉 Holi deals: 5 stores near you have discounts</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
 
       {/* ═══ MY STORE — What This Shop Sells ═══ */}
       {(() => {
