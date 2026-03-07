@@ -7,13 +7,15 @@ import {
   ArrowRight, Sparkles, Package, BarChart3, Activity, CloudSun, Sun, Cloud,
   CloudRain, Thermometer, Bell, MessageCircle, Eye, GitCompare, ClipboardList,
   Zap, Receipt, Truck, ShieldCheck, ScanLine, FileText, Camera, Database,
-  PlayCircle, CheckCircle2, ChevronRight, Store,
+  PlayCircle, CheckCircle2, ChevronRight, Store, ShoppingBag, Brain,
+  Briefcase, LayoutGrid,
 } from 'lucide-react'
 import { api } from '../utils/api'
 import { useSales } from '../utils/SalesContext'
 import { useTheme } from '../utils/ThemeContext'
 import OnboardingModal, { isOnboarded, getOnboardingData } from '../components/OnboardingModal'
 import { CountUp } from '../components/AnimatedComponents'
+import { DashboardSection, ModuleCard, QuickActionCard, InsightsPanel, ActivityFeed } from '../components/dashboard'
 
 const COLORS = ['#FF9933', '#138d75', '#7c3aed', '#C0392B', '#3b82f6']
 
@@ -200,51 +202,45 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* ═══ ROW 2: AI Insight + Quick Stats (single dense row) ═══ */}
-      <div className="grid lg:grid-cols-5 gap-3 mb-4">
-        {/* AI Insight — 2 cols */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-2 bg-gradient-to-br from-[#1E1B4B] via-[#312e81] to-[#1E1B4B] rounded-xl p-4 text-white flex items-center gap-3 relative overflow-hidden"
-        >
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-saffron-500 rounded-full blur-[80px]" />
-          </div>
-          <div className="w-10 h-10 bg-white/15 backdrop-blur-sm rounded-lg flex items-center justify-center flex-shrink-0 relative z-10">
-            <Sparkles className="w-5 h-5 text-saffron-300" />
-          </div>
-          <div className="relative z-10 flex-1 min-w-0">
-            <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">AI Insight</p>
-            <p className="text-xs font-medium leading-relaxed mt-0.5 line-clamp-2">{data.quickInsight}</p>
-          </div>
-          <Link to="/chat" className="relative z-10 flex-shrink-0">
-            <motion.div whileHover={{ scale: 1.05 }} className="bg-saffron-500 text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-lg shadow-saffron-500/30">
-              <Zap className="w-3 h-3" /> Ask AI
-            </motion.div>
-          </Link>
-        </motion.div>
+      {/* ═══ SECTION 1: QUICK ACTIONS — Top priority workflows ═══ */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Zap className={`w-4 h-4 ${dk ? 'text-saffron-400' : 'text-saffron-500'}`} />
+          <h3 className={`text-sm font-semibold ${dk ? 'text-gray-200' : 'text-gray-800'}`}>Quick Actions</h3>
+          <span className={`text-[10px] ${dk ? 'text-gray-500' : 'text-gray-400'}`}>Start here</span>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5">
+          <QuickActionCard path="/scanner" label="Scan Bill" description="OCR extract items from photo" icon={ScanLine} gradient="from-violet-500 to-purple-600" index={0} />
+          <QuickActionCard path="/pricing" label="Check Pricing" description="AI-optimized profit margins" icon={IndianRupee} gradient="from-saffron-400 to-orange-500" index={1} />
+          <QuickActionCard path="/sourcing" label="Source Products" description="Best wholesale deals nearby" icon={Package} gradient="from-teal-400 to-emerald-500" index={2} />
+          <QuickActionCard path="/chat" label="Ask Munim-ji" description="AI business advisor in Hinglish" icon={MessageCircle} gradient="from-indigo-500 to-violet-600" index={3} />
+          <QuickActionCard path="/content" label="Create Content" description="Marketing in 6 languages" icon={Languages} gradient="from-cyan-400 to-teal-500" index={4} />
+        </div>
+      </motion.div>
 
-        {/* 4 Stat Cards — 1 col each, compact */}
+      {/* ═══ SECTION 2: AI Stats Row ═══ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mb-6">
         {[
-          { label: 'Trending', value: data.summary.trendingProductsCount, icon: TrendingUp, color: 'text-saffron-500', bg: 'bg-saffron-500/10' },
+          { label: 'Trending Products', value: data.summary.trendingProductsCount, icon: TrendingUp, color: 'text-saffron-500', bg: 'bg-saffron-500/10' },
           { label: 'Price Confidence', value: data.summary.avgPricingConfidence, suffix: '%', icon: IndianRupee, color: 'text-bazaar-500', bg: 'bg-bazaar-500/10' },
-          { label: 'Sentiment', value: data.summary.overallSentimentScore, suffix: '/100', icon: Activity, color: 'text-royal-500', bg: 'bg-royal-500/10' },
+          { label: 'Sentiment Score', value: data.summary.overallSentimentScore, suffix: '/100', icon: Activity, color: 'text-royal-500', bg: 'bg-royal-500/10' },
+          { label: "Today's Revenue", value: Math.round(todayRevenue), prefix: '₹', icon: ShoppingBag, color: 'text-green-500', bg: 'bg-green-500/10', sub: `${todaySales.length} invoices` },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
+            transition={{ delay: i * 0.04 }}
             className={`rounded-xl p-3.5 border hover:shadow-md transition-all ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-[10px] font-medium ${dk ? 'text-gray-500' : 'text-gray-400'}`}>{stat.label}</p>
-                <p className="text-xl font-display font-bold ${dk ? 'text-gray-100' : 'text-gray-900'} mt-0.5">
-                  <CountUp end={typeof stat.value === 'number' ? stat.value : parseInt(stat.value)} duration={1.2} />
+                <p className={`text-xl font-display font-bold mt-0.5 ${dk ? 'text-gray-100' : 'text-gray-900'}`}>
+                  {stat.prefix || ''}<CountUp end={typeof stat.value === 'number' ? stat.value : parseInt(stat.value)} duration={1.2} />
                   {stat.suffix || ''}
                 </p>
+                {stat.sub && <p className="text-[9px] text-gray-600">{stat.sub}</p>}
               </div>
               <div className={`w-9 h-9 rounded-lg ${stat.bg} flex items-center justify-center`}>
                 <stat.icon className={`w-4 h-4 ${stat.color}`} />
@@ -254,216 +250,75 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* ═══ SALES OVERVIEW — What's Going Out ═══ */}
-      <div className="grid lg:grid-cols-4 gap-3 mb-4">
-        {/* Today's Sales Stats */}
+      {/* ═══ SECTION 3: INSIGHTS — AI + Alerts + Festivals ═══ */}
+      <InsightsPanel
+        quickInsight={data.quickInsight}
+        alerts={data.alerts}
+        festivals={data.regionalInfo.festivals}
+        selectedCity={selectedCity}
+      />
+
+      {/* ═══ SECTION 4: SALES OVERVIEW — Compact row ═══ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mb-6">
         {[
-          { label: "Today's Revenue", value: `₹${Math.round(todayRevenue).toLocaleString('en-IN')}`, icon: IndianRupee, color: 'text-green-400', bg: 'bg-green-500/10', sub: `${todaySales.length} invoices` },
-          { label: 'Items Sold Today', value: todayItemsSold.toString(), icon: Package, color: 'text-saffron-400', bg: 'bg-saffron-500/10', sub: 'units moved out' },
+          { label: 'Items Sold Today', value: todayItemsSold.toString(), icon: Package, color: 'text-saffron-400', bg: 'bg-saffron-500/10', sub: 'units moved' },
           { label: 'Weekly Revenue', value: `₹${Math.round(weeklyRevenue).toLocaleString('en-IN')}`, icon: TrendingUp, color: 'text-royal-400', bg: 'bg-royal-500/10', sub: 'last 7 days' },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className={`rounded-xl p-3.5 border hover:shadow-md transition-all ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}
+            transition={{ delay: i * 0.04 }}
+            className={`rounded-xl p-3 border ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-[10px] font-medium ${dk ? 'text-gray-500' : 'text-gray-400'}`}>{stat.label}</p>
-                <p className="text-xl font-display font-bold ${dk ? 'text-gray-100' : 'text-gray-900'} mt-0.5">{stat.value}</p>
+                <p className={`text-lg font-display font-bold mt-0.5 ${dk ? 'text-gray-100' : 'text-gray-900'}`}>{stat.value}</p>
                 <p className="text-[9px] text-gray-600">{stat.sub}</p>
               </div>
-              <div className={`w-9 h-9 rounded-lg ${stat.bg} flex items-center justify-center`}>
+              <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center`}>
                 <stat.icon className={`w-4 h-4 ${stat.color}`} />
               </div>
             </div>
           </motion.div>
         ))}
-
         {/* Top Selling Items */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className={`rounded-xl p-3.5 border ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}
+          transition={{ delay: 0.1 }}
+          className={`col-span-2 rounded-xl p-3 border ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}
         >
-          <h4 className="text-[10px] text-gray-500 font-medium mb-2 flex items-center gap-1">
-            <BarChart3 className="w-3 h-3 text-saffron-500" />
-            Top Selling (This Week)
+          <h4 className="text-[10px] text-gray-500 font-medium mb-1.5 flex items-center gap-1">
+            <BarChart3 className="w-3 h-3 text-saffron-500" /> Top Selling (This Week)
           </h4>
-          <div className="space-y-1">
-            {topSellingItems.length > 0 ? topSellingItems.slice(0, 3).map((item, i) => (
-              <div key={item.name} className="flex items-center gap-2">
-                <span className="text-[9px] font-bold text-gray-600 w-3">{i + 1}</span>
-                <span className="text-[10px] text-gray-300 flex-1 truncate">{item.name}</span>
-                <span className="text-[10px] font-semibold text-saffron-400">{item.qty} sold</span>
+          <div className="flex items-center gap-4">
+            {topSellingItems.length > 0 ? topSellingItems.slice(0, 4).map((item, i) => (
+              <div key={item.name} className="flex items-center gap-1.5">
+                <span className="text-[9px] font-bold text-gray-600">{i + 1}.</span>
+                <span className={`text-[10px] truncate ${dk ? 'text-gray-300' : 'text-gray-700'}`}>{item.name}</span>
+                <span className="text-[10px] font-semibold text-saffron-400">{item.qty}</span>
               </div>
             )) : (
               <p className="text-[10px] text-gray-600">Generate invoices to see sales data</p>
             )}
-          </div>
-          <Link to="/invoices" className="flex items-center gap-1 text-[9px] text-orange-400 font-medium mt-2 hover:text-orange-300">
-            Create Invoice <ArrowRight className="w-2.5 h-2.5" />
-          </Link>
-        </motion.div>
-      </div>
-
-      {/* ═══ MY STORE — What This Shop Sells ═══ */}
-      {(() => {
-        const ob = getOnboardingData()
-        return ob && ob.products && ob.products.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`rounded-xl p-4 border mb-4 ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${dk ? 'text-gray-300' : 'text-gray-700'}`}>
-                <div className="w-1.5 h-1.5 rounded-full bg-saffron-500" />
-                My Store Catalog — {ob.category}
-                <span className="text-[9px] text-gray-500 ml-1">({ob.products.length} products selected during setup)</span>
-              </h3>
-              <Link to="/inventory" className="text-[9px] text-orange-400 font-medium hover:text-orange-300 flex items-center gap-1">
-                View Inventory <ArrowRight className="w-2.5 h-2.5" />
-              </Link>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {ob.products.map((p: string) => (
-                <span key={p} className="text-[10px] px-2.5 py-1 rounded-lg bg-saffron-500/10 text-saffron-400 font-medium border border-saffron-500/20">
-                  {p}
-                </span>
-              ))}
-              <span className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.03] text-gray-500 font-medium">
-                + common items auto-added
-              </span>
-            </div>
-            <p className="text-[9px] text-gray-600 mt-2">
-              These products seed your inventory, pricing AI, and demand forecasts. Add more via Bill Scanner or Sourcing.
-            </p>
-          </motion.div>
-        ) : null
-      })()}
-
-      {/* ═══ DATA FLOW DEMO — For Judges ═══ */}
-      <div className="grid lg:grid-cols-5 gap-3 mb-4">
-        {/* Live Data Flow Activity — 3 cols */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-3 bg-[#1a1a1d] rounded-xl p-4 border border-[#2a2a2d]"
-        >
-          <h3 className={`text-xs font-semibold mb-3 flex items-center gap-1.5 ${dk ? 'text-gray-300' : 'text-gray-700'}`}>
-            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            Live Data Flow — How Your Store Data Builds
-          </h3>
-          <div className="space-y-2">
-            {[
-              // Show real recent sales from SalesContext
-              ...todaySales.slice(0, 2).map(sale => ({
-                time: new Date(sale.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-                icon: Receipt,
-                color: 'text-emerald-400',
-                bg: 'bg-emerald-500/10',
-                action: `Sale: ${sale.customerName}`,
-                detail: `→ ₹${Math.round(sale.grandTotal).toLocaleString('en-IN')} | ${sale.items.reduce((s, i) => s + i.qty, 0)} items sold`,
-                link: '/invoices',
-                tag: sale.invoiceNum,
-              })),
-              { time: '2 min ago', icon: Camera, color: 'text-violet-400', bg: 'bg-violet-500/10', action: 'Bill Scanned', detail: '→ 8 items extracted → Added to Inventory', link: '/scanner', tag: 'AI Vision' },
-              ...(todaySales.length === 0 ? [{ time: '15 min ago', icon: Receipt, color: 'text-emerald-400', bg: 'bg-emerald-500/10', action: 'Invoice Generated', detail: '→ ₹4,580 sale recorded → Dashboard analytics updated', link: '/invoices', tag: 'GST Invoice' }] : []),
-              { time: '1 hr ago', icon: MessageCircle, color: 'text-green-400', bg: 'bg-green-500/10', action: 'WhatsApp Order', detail: '→ "50 Surf Excel" → Stock reserved, order placed', link: '/chat', tag: 'WhatsApp AI' },
-              { time: '3 hrs ago', icon: Package, color: 'text-blue-400', bg: 'bg-blue-500/10', action: 'Wholesale Order', detail: '→ 200 units from Gupta Traders → Incoming stock tracked', link: '/sourcing', tag: 'Sourcing' },
-              { time: '5 hrs ago', icon: IndianRupee, color: 'text-orange-400', bg: 'bg-orange-500/10', action: 'Price Updated', detail: '→ AI analyzed 12 competitors → Margins optimized to 22%', link: '/pricing', tag: 'Smart Pricing' },
-            ].slice(0, 5).map((event, i) => (
-              <Link key={i} to={event.link}>
-                <motion.div
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.06 }}
-                  className={`flex items-center gap-3 p-2 rounded-lg transition-colors group ${dk ? 'hover:bg-white/[0.04]' : 'hover:bg-gray-50'}`}
-                >
-                  <div className={`w-7 h-7 rounded-lg ${event.bg} flex items-center justify-center flex-shrink-0`}>
-                    <event.icon className={`w-3.5 h-3.5 ${event.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[11px] font-semibold ${dk ? 'text-gray-200' : 'text-gray-800'}`}>{event.action}</span>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${dk ? 'bg-white/[0.04] text-gray-500' : 'bg-gray-100 text-gray-500'}`}>{event.tag}</span>
-                    </div>
-                    <p className="text-[10px] ${dk ? 'text-gray-500' : 'text-gray-400'} truncate">{event.detail}</p>
-                  </div>
-                  <span className="text-[9px] text-gray-600 flex-shrink-0">{event.time}</span>
-                  <ChevronRight className="w-3 h-3 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </motion.div>
-              </Link>
-            ))}
-          </div>
-          <div className="mt-3 pt-2 ${dk ? 'border-t border-[#2a2a2d]' : 'border-t border-gray-200'} flex items-center gap-2">
-            <Database className="w-3 h-3 text-orange-500" />
-            <p className="text-[9px] text-gray-500">
-              <span className="text-orange-400 font-semibold">Zero manual data entry.</span> Every action above automatically feeds into analytics, inventory & AI insights via DynamoDB + Bedrock.
-            </p>
-          </div>
-        </motion.div>
-
-        {/* Guided Demo for Judges — 2 cols */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="lg:col-span-2 bg-gradient-to-br from-[#1E1B4B] via-[#312e81] to-[#1E1B4B] rounded-xl p-4 text-white relative overflow-hidden"
-        >
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute bottom-0 right-0 w-40 h-40 bg-orange-500 rounded-full blur-[80px]" />
-          </div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-3">
-              <PlayCircle className="w-4 h-4 text-orange-400" />
-              <h3 className="text-xs font-semibold text-white/90">Try the Data Flow</h3>
-            </div>
-            <p className="text-[10px] text-white/50 mb-3">See how daily actions become business intelligence:</p>
-            <div className="space-y-1.5">
-              {[
-                { step: '1', label: 'Scan a Bill', desc: 'Upload any photo → AI extracts items', path: '/scanner', icon: Camera },
-                { step: '2', label: 'Check Inventory', desc: 'See scanned items auto-added', path: '/inventory', icon: ClipboardList },
-                { step: '3', label: 'Create Invoice', desc: 'Generate GST bill → sale recorded', path: '/invoices', icon: Receipt },
-                { step: '4', label: 'Ask Munim-ji', desc: '"What\'s my best selling item?"', path: '/chat', icon: MessageCircle },
-              ].map((step, i) => (
-                <Link key={step.step} to={step.path}>
-                  <motion.div
-                    initial={{ opacity: 0, x: 8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 + i * 0.08 }}
-                    whileHover={{ x: 4 }}
-                    className="flex items-center gap-2.5 p-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] transition-colors cursor-pointer group"
-                  >
-                    <div className="w-6 h-6 rounded-md bg-orange-500/20 flex items-center justify-center text-[10px] font-bold text-orange-400 flex-shrink-0">
-                      {step.step}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-semibold text-white/90">{step.label}</p>
-                      <p className="text-[9px] text-white/40">{step.desc}</p>
-                    </div>
-                    <ArrowRight className="w-3 h-3 text-white/30 group-hover:text-orange-400 transition-colors" />
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
+            <Link to="/invoices" className="ml-auto flex items-center gap-1 text-[9px] text-orange-400 font-medium hover:text-orange-300">
+              Create Invoice <ArrowRight className="w-2.5 h-2.5" />
+            </Link>
           </div>
         </motion.div>
       </div>
 
-      {/* ═══ ROW 3: Charts + Weather + Alerts (3-col dense grid) ═══ */}
-      <div className="grid lg:grid-cols-3 gap-3 mb-4">
+      {/* ═══ SECTION 5: CHARTS + WEATHER — Analytics row ═══ */}
+      <div className="grid lg:grid-cols-3 gap-3 mb-6">
         {/* Sentiment Trend */}
         <div className={`rounded-xl p-4 border ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}>
           <h3 className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${dk ? 'text-gray-300' : 'text-gray-700'}`}>
             <div className="w-1.5 h-1.5 rounded-full bg-saffron-500" />
             Sentiment Trend
           </h3>
-          <ResponsiveContainer width="100%" height={140}>
+          <ResponsiveContainer width="100%" height={130}>
             <LineChart data={sentimentData}>
               <defs>
                 <linearGradient id="sentGrad" x1="0" y1="0" x2="1" y2="0">
@@ -479,13 +334,13 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Demand Forecast */}
+        {/* Demand Forecast + Category Pie */}
         <div className={`rounded-xl p-4 border ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}>
           <h3 className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${dk ? 'text-gray-300' : 'text-gray-700'}`}>
             <div className="w-1.5 h-1.5 rounded-full bg-bazaar-500" />
             Demand Forecast
           </h3>
-          <ResponsiveContainer width="100%" height={140}>
+          <ResponsiveContainer width="100%" height={130}>
             <AreaChart data={forecastData}>
               <defs>
                 <linearGradient id="demandGrad" x1="0" y1="0" x2="0" y2="1">
@@ -502,7 +357,7 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Weather Widget — compact */}
+        {/* Weather Widget */}
         <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl p-4 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
           <h3 className="text-[10px] font-semibold text-white/70 flex items-center gap-1 mb-2">
@@ -538,25 +393,83 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ═══ ROW 4: Category Pie + Festivals + Alerts (3-col) ═══ */}
-      <div className="grid lg:grid-cols-3 gap-3 mb-4">
-        {/* Category Distribution */}
+      {/* ═══ SECTION 6: GROUPED FEATURE MODULES + ACTIVITY SIDEBAR ═══ */}
+      <div className="grid lg:grid-cols-4 gap-4 mb-6">
+        {/* Left: Grouped modules — 3 cols */}
+        <div className="lg:col-span-3 space-y-1">
+
+          {/* AI Tools */}
+          <DashboardSection
+            title="AI Tools"
+            titleHi="AI टूल्स"
+            description="Your intelligent business assistants"
+            icon={Brain}
+            iconColor="text-royal-400"
+            columns={3}
+          >
+            <ModuleCard path="/chat" label="Munim-ji AI" labelHi="AI सलाहकार" description="AI business advisor — ask anything in Hindi or English" icon={MessageCircle} color="text-royal-400" bg="bg-royal-500/10" index={0} badge="Popular" />
+            <ModuleCard path="/content" label="Content Generator" labelHi="कंटेंट" description="Marketing content in 6 languages for all platforms" icon={Languages} color="text-bazaar-400" bg="bg-bazaar-500/10" index={1} />
+            <ModuleCard path="/sentiment" label="Sentiment Analyzer" labelHi="सेंटिमेंट" description="Analyze customer reviews and market sentiment" icon={MessageSquareText} color="text-pink-400" bg="bg-pink-500/10" index={2} />
+          </DashboardSection>
+
+          {/* Pricing & Competition */}
+          <DashboardSection
+            title="Pricing & Competition"
+            titleHi="मूल्य निर्धारण"
+            description="Stay ahead with smart pricing intelligence"
+            icon={IndianRupee}
+            iconColor="text-saffron-400"
+            columns={4}
+          >
+            <ModuleCard path="/pricing" label="Smart Pricing" labelHi="स्मार्ट प्राइसिंग" description="AI-optimized pricing with competitor data" icon={IndianRupee} color="text-saffron-400" bg="bg-saffron-500/10" index={0} badge="AI" />
+            <ModuleCard path="/competitors" label="Competitors" labelHi="प्रतिस्पर्धी" description="Monitor rival prices in real-time" icon={Eye} color="text-amber-400" bg="bg-amber-500/10" index={1} />
+            <ModuleCard path="/compare" label="Compare" labelHi="तुलना करें" description="Side-by-side product analysis" icon={GitCompare} color="text-cyan-400" bg="bg-cyan-500/10" index={2} />
+            <ModuleCard path="/sourcing" label="Smart Sourcing" labelHi="स्मार्ट सोर्सिंग" description="Best wholesale deals from nearby suppliers" icon={Package} color="text-green-400" bg="bg-green-500/10" index={3} />
+          </DashboardSection>
+
+          {/* Store Management */}
+          <DashboardSection
+            title="Store Management"
+            titleHi="स्टोर प्रबंधन"
+            description="Run your daily operations smoothly"
+            icon={Store}
+            iconColor="text-blue-400"
+            columns={4}
+          >
+            <ModuleCard path="/inventory" label="Inventory" labelHi="इन्वेंटरी" description="DynamoDB-powered stock tracking" icon={ClipboardList} color="text-blue-400" bg="bg-blue-500/10" index={0} />
+            <ModuleCard path="/orders" label="Orders" labelHi="ऑर्डर" description="Track and manage all orders" icon={Truck} color="text-indigo-400" bg="bg-indigo-500/10" index={1} />
+            <ModuleCard path="/scanner" label="Bill Scanner" labelHi="बिल स्कैनर" description="OCR + AI to extract bill items" icon={ScanLine} color="text-teal-400" bg="bg-teal-500/10" index={2} badge="AI" />
+            <ModuleCard path="/tracking" label="Delivery Tracking" labelHi="डिलीवरी ट्रैकिंग" description="Real-time shipment status" icon={Truck} color="text-violet-400" bg="bg-violet-500/10" index={3} />
+          </DashboardSection>
+
+          {/* Business & Finance */}
+          <DashboardSection
+            title="Business & Finance"
+            titleHi="व्यापार और वित्त"
+            description="Invoicing, credit tracking, and compliance"
+            icon={Briefcase}
+            iconColor="text-emerald-400"
+            columns={3}
+          >
+            <ModuleCard path="/invoices" label="GST Invoice" labelHi="GST बिल" description="Generate PDF invoices with WhatsApp share" icon={Receipt} color="text-emerald-400" bg="bg-emerald-500/10" index={0} />
+            <ModuleCard path="/khata" label="Khata Book" labelHi="खाता बुक" description="Digital credit and payment tracking" icon={FileText} color="text-orange-400" bg="bg-orange-500/10" index={1} />
+          </DashboardSection>
+
+        </div>
+
+        {/* Right: Activity Feed — 1 col */}
+        <div className="lg:col-span-1">
+          <ActivityFeed todaySales={todaySales} recentActivity={data.recentActivity} />
+        </div>
+      </div>
+
+      {/* Category Distribution — compact */}
+      <div className="grid lg:grid-cols-2 gap-3 mb-6">
         <div className={`rounded-xl p-4 border ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}>
           <h3 className={`text-xs font-semibold mb-2 ${dk ? 'text-gray-300' : 'text-gray-700'}`}>Category Distribution</h3>
-          <ResponsiveContainer width="100%" height={150}>
+          <ResponsiveContainer width="100%" height={140}>
             <PieChart>
-              <Pie
-                data={data.charts.categoryDistribution}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={60}
-                innerRadius={32}
-                label={({ name, value }) => `${name} ${value}%`}
-                strokeWidth={2}
-                stroke="#1a1a1d"
-              >
+              <Pie data={data.charts.categoryDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={55} innerRadius={30} label={({ name, value }) => `${name} ${value}%`} strokeWidth={2} stroke={dk ? '#1a1a1d' : '#fff'}>
                 {data.charts.categoryDistribution.map((_: any, i: number) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
@@ -566,163 +479,46 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Upcoming Festivals */}
-        <div className={`rounded-xl p-4 border ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}>
-          <h3 className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${dk ? 'text-gray-300' : 'text-gray-700'}`}>
-            <Calendar className="w-3.5 h-3.5 text-saffron-500" />
-            Upcoming Festivals — {selectedCity}
-          </h3>
-          <div className="space-y-1.5 max-h-[150px] overflow-y-auto">
-            {data.regionalInfo.festivals.length > 0 ? data.regionalInfo.festivals.map((f: any, i: number) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: 8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-center justify-between p-2 ${dk ? 'bg-white/[0.03] hover:bg-white/[0.06]' : 'bg-gray-50 hover:bg-gray-100'} rounded-lg transition-colors"
-              >
-                <div>
-                  <p className={`text-xs font-medium ${dk ? 'text-gray-200' : 'text-gray-800'}`}>{f.name}</p>
-                  <p className={`text-[10px] ${dk ? 'text-gray-500' : 'text-gray-400'}`}>{f.daysAway} days away</p>
-                </div>
-                <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${
-                  f.impact === 'very_high' ? 'bg-red-500/10 text-red-400' :
-                  f.impact === 'high' ? 'bg-saffron-500/10 text-saffron-400' :
-                  'bg-white/[0.06] text-gray-400'
-                }`}>
-                  {f.impact.replace('_', ' ')}
-                </span>
-              </motion.div>
-            )) : (
-              <p className="text-gray-400 text-xs py-4 text-center">No major festivals upcoming</p>
-            )}
+        {/* Getting Started Guide */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-[#1E1B4B] via-[#312e81] to-[#1E1B4B] rounded-xl p-4 text-white relative overflow-hidden"
+        >
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute bottom-0 right-0 w-40 h-40 bg-orange-500 rounded-full blur-[80px]" />
           </div>
-        </div>
-
-        {/* Smart Alerts — compact */}
-        <div className={`rounded-xl p-4 border ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}>
-          <h3 className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${dk ? 'text-gray-300' : 'text-gray-700'}`}>
-            <Bell className="w-3.5 h-3.5 text-saffron-500" />
-            Smart Alerts
-          </h3>
-          <div className="space-y-1.5 max-h-[150px] overflow-y-auto">
-            {data.alerts?.slice(0, 5).map((alert: any, i: number) => {
-              const AlertIcon = ALERT_ICONS[alert.icon] || Sparkles
-              return (
-                <Link key={alert.id} to={alert.actionRoute}>
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-3">
+              <PlayCircle className="w-4 h-4 text-orange-400" />
+              <h3 className="text-xs font-semibold text-white/90">Getting Started</h3>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/50">For new users</span>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {[
+                { step: '1', label: 'Scan a Bill', desc: 'AI extracts items', path: '/scanner', icon: Camera },
+                { step: '2', label: 'Check Inventory', desc: 'Items auto-added', path: '/inventory', icon: ClipboardList },
+                { step: '3', label: 'Create Invoice', desc: 'GST bill → sale', path: '/invoices', icon: Receipt },
+                { step: '4', label: 'Ask Munim-ji', desc: 'Get AI advice', path: '/chat', icon: MessageCircle },
+              ].map((step, i) => (
+                <Link key={step.step} to={step.path}>
                   <motion.div
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    className={`flex items-start gap-2 p-2 rounded-lg border transition-all hover:shadow-sm ${
-                      alert.severity === 'high' ? 'bg-red-500/5 border-red-500/15' :
-                      alert.severity === 'medium' ? 'bg-saffron-500/5 border-saffron-500/15' :
-                      'bg-white/[0.02] border-[#2a2a2d]'
-                    }`}
+                    whileHover={{ x: 2 }}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] transition-colors cursor-pointer group"
                   >
-                    <div className={`w-6 h-6 rounded flex items-center justify-center flex-shrink-0 ${
-                      alert.severity === 'high' ? 'bg-red-500/15 text-red-400' :
-                      alert.severity === 'medium' ? 'bg-saffron-500/15 text-saffron-400' :
-                      'bg-white/[0.06] text-gray-400'
-                    }`}>
-                      <AlertIcon className="w-3 h-3" />
+                    <div className="w-5 h-5 rounded bg-orange-500/20 flex items-center justify-center text-[9px] font-bold text-orange-400 flex-shrink-0">
+                      {step.step}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-[11px] font-medium truncate ${dk ? 'text-gray-200' : 'text-gray-800'}`}>{alert.title}</p>
-                      <p className="text-[10px] ${dk ? 'text-gray-500' : 'text-gray-400'} truncate">{alert.message}</p>
+                      <p className="text-[10px] font-semibold text-white/90">{step.label}</p>
+                      <p className="text-[8px] text-white/40">{step.desc}</p>
                     </div>
                   </motion.div>
                 </Link>
-              )
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* ═══ ROW 5: All 12 AI Features — Compact Grid ═══ */}
-      <div className="mb-4">
-        <h3 className={`text-xs font-semibold mb-2.5 flex items-center gap-1.5 ${dk ? 'text-gray-300' : 'text-gray-700'}`}>
-          <Sparkles className="w-3.5 h-3.5 text-saffron-500" />
-          All AI Features — 12 Modules
-        </h3>
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-          {allFeatures.map((f, i) => (
-            <Link key={f.path} to={f.path}>
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                whileHover={{ y: -2, scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                className={`rounded-xl p-3 border cursor-pointer hover:shadow-md hover:border-orange-500/20 transition-all group ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}
-              >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${f.bg}`}>
-                  <f.icon className={`w-4 h-4 ${f.color}`} />
-                </div>
-                <h4 className={`text-[11px] font-semibold leading-tight ${dk ? 'text-gray-200' : 'text-gray-800'}`}>{f.label}</h4>
-                <p className={`text-[9px] font-hindi ${dk ? 'text-gray-500' : 'text-gray-400'}`}>{f.labelHi}</p>
-                <p className={`text-[9px] mt-0.5 ${dk ? 'text-gray-500' : 'text-gray-400'}`}>{f.desc}</p>
-              </motion.div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* ═══ ROW 6: Quick Actions + Recent Activity (side by side) ═══ */}
-      <div className="grid lg:grid-cols-2 gap-3 mb-4">
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { path: '/sourcing', label: 'Source Products', icon: Package, gradient: 'from-teal-400 to-emerald-500' },
-            { path: '/pricing', label: 'Check Pricing', icon: IndianRupee, gradient: 'from-saffron-400 to-orange-500' },
-            { path: '/chat', label: 'Ask AI Advisor', icon: MessageCircle, gradient: 'from-violet-400 to-purple-500' },
-            { path: '/content', label: 'Create Content', icon: Languages, gradient: 'from-cyan-400 to-teal-500' },
-          ].map((action, i) => (
-            <Link key={action.path} to={action.path}>
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04 }}
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                className={`bg-gradient-to-br ${action.gradient} rounded-xl p-3.5 text-white cursor-pointer shadow-lg hover:shadow-xl transition-shadow`}
-              >
-                <action.icon className="w-4 h-4 mb-1.5 text-white/80" />
-                <p className="text-xs font-semibold">{action.label}</p>
-              </motion.div>
-            </Link>
-          ))}
-        </div>
-
-        {/* Recent Activity */}
-        <div className={`rounded-xl p-4 border ${dk ? 'bg-[#1a1a1d] border-[#2a2a2d]' : 'bg-white border-gray-200'}`}>
-          <h3 className={`text-xs font-semibold mb-2 ${dk ? 'text-gray-300' : 'text-gray-700'}`}>Recent Activity</h3>
-          <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
-            {data.recentActivity.map((a: any, i: number) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className="flex items-center gap-3 p-2 ${dk ? 'bg-white/[0.03] hover:bg-white/[0.06]' : 'bg-gray-50 hover:bg-gray-100'} rounded-lg transition-colors"
-              >
-                <div className={`w-6 h-6 rounded flex items-center justify-center flex-shrink-0 ${
-                  a.type === 'pricing' ? 'bg-saffron-500/10 text-saffron-400' :
-                  a.type === 'content' ? 'bg-bazaar-500/10 text-bazaar-400' :
-                  a.type === 'sentiment' ? 'bg-royal-500/10 text-royal-400' :
-                  'bg-green-500/10 text-green-400'
-                }`}>
-                  {a.type === 'pricing' ? <IndianRupee className="w-3 h-3" /> :
-                   a.type === 'content' ? <Languages className="w-3 h-3" /> :
-                   a.type === 'sentiment' ? <MessageSquareText className="w-3 h-3" /> :
-                   <TrendingUp className="w-3 h-3" />}
-                </div>
-                <p className={`text-[11px] flex-1 truncate ${dk ? 'text-gray-300' : 'text-gray-700'}`}>{a.description}</p>
-                <span className="text-[10px] text-gray-500 flex-shrink-0">{a.time}</span>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* ═══ FOOTER ═══ */}
