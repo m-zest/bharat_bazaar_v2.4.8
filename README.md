@@ -32,6 +32,8 @@
 
 > **The app works fully out of the box — no AWS credentials required.** All AI features gracefully degrade to intelligent, realistic cached responses when cloud services are unavailable.
 
+## Project Summary
+[Project Summary File](project_summary.md)
 ## Web App
 
 - **Live Preview**: [https://d3j4u51h5o0dhm.cloudfront.net](https://d3j4u51h5o0dhm.cloudfront.net)
