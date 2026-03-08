@@ -30,13 +30,20 @@
 
 ## Demo Guide for Judges
 
-> **The app works fully out of the box — no AWS credentials required.** All AI features gracefully degrade to intelligent, realistic cached responses when cloud services are unavailable.
+> **The app works fully out of the box - no AWS credentials required.** All AI features gracefully degrade to intelligent, realistic cached responses when cloud services are unavailable.
 
-## Project Summary
-[Project Summary File](project_summary.md)
-## Web App
+##  Project Summary
 
-- **Live Preview**: [https://d3j4u51h5o0dhm.cloudfront.net](https://d3j4u51h5o0dhm.cloudfront.net)
+> **[View Full Project Summary (PDF)](./BharatBazaar-Project-Summary.pdf)**
+
+| Item | Link |
+|------|------|
+|  Web App | [d3j4u51h5o0dhm.cloudfront.net](https://d3j4u51h5o0dhm.cloudfront.net) |
+|  Mobile App | [d2a5rnm0qdxhtx.cloudfront.net](https://d2a5rnm0qdxhtx.cloudfront.net) |
+|  Presentation | [View PPT](./BharatBazaarParityAI.pdf) |
+|  Project Summary | [View PDF](BharatBazaar-Summary.pdf) |
+
+
 ## Mobile App
 
 We also have a mobile application for BharatBazaar AI, built for Android and iOS.
