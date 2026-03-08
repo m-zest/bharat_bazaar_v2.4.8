@@ -11,6 +11,7 @@
   <img src="https://img.shields.io/badge/Amazon-DynamoDB-4053D6?style=for-the-badge&logo=amazon-dynamodb&logoColor=white" alt="DynamoDB" />
   <img src="https://img.shields.io/badge/Docker-Container-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 18" />
+  <img src="https://img.shields.io/badge/React_Native-0.76-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React Native" />
   <img src="https://img.shields.io/badge/TypeScript-5.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
@@ -30,6 +31,16 @@
 ## Demo Guide for Judges
 
 > **The app works fully out of the box — no AWS credentials required.** All AI features gracefully degrade to intelligent, realistic cached responses when cloud services are unavailable.
+
+## Web App
+
+- **Live Preview**: [https://d3j4u51h5o0dhm.cloudfront.net](https://d3j4u51h5o0dhm.cloudfront.net)
+## Mobile App
+
+We also have a mobile application for BharatBazaar AI, built for Android and iOS.
+
+- **Repository**: [bharat_bazaar_mobile](https://github.com/ParityAI/bharat_bazaar_mobile)
+- **Live Preview**: [https://d2a5rnm0qdxhtx.cloudfront.net](https://d2a5rnm0qdxhtx.cloudfront.net)
 
 ### Demo Credentials
 
