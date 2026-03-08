@@ -1,14 +1,26 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import { callGemini } from './gemini-client';
 
+// Use secondary AWS account credentials for Bedrock if provided
+const bedrockCredentials = process.env.BEDROCK_ACCESS_KEY_ID && process.env.BEDROCK_SECRET_ACCESS_KEY
+  ? {
+      credentials: {
+        accessKeyId: process.env.BEDROCK_ACCESS_KEY_ID,
+        secretAccessKey: process.env.BEDROCK_SECRET_ACCESS_KEY,
+      },
+    }
+  : {};
+
 // Primary client (ap-south-1)
 const primaryClient = new BedrockRuntimeClient({
-  region: process.env.AWS_REGION || 'ap-south-1',
+  region: process.env.BEDROCK_REGION || process.env.AWS_REGION || 'ap-south-1',
+  ...bedrockCredentials,
 });
 
 // Fallback client (us-east-1) for cross-region attempts
 const usEastClient = new BedrockRuntimeClient({
   region: 'us-east-1',
+  ...bedrockCredentials,
 });
 
 const MODEL_ID = process.env.BEDROCK_MODEL_ID || 'anthropic.claude-3-haiku-20240307-v1:0';
@@ -116,22 +128,7 @@ export async function invokeBedrockClaude(
 ): Promise<string> {
   const { maxTokens = 2000, temperature = 0.3, systemPrompt } = options;
 
-  // --- 1. Try Gemini first (primary path during hackathon) ---
-  if (process.env.GEMINI_API_KEY) {
-    try {
-      const fullPrompt = systemPrompt
-        ? `${systemPrompt}\n\n${prompt}`
-        : prompt;
-      console.log('Trying Gemini 1.5 Flash (primary)');
-      const result = await callGemini(fullPrompt, { temperature, maxOutputTokens: maxTokens });
-      console.log('Success with Gemini 1.5 Flash');
-      return result;
-    } catch (err: any) {
-      console.error('Gemini failed, falling back to Bedrock:', err.message);
-    }
-  }
-
-  // --- 2. Fallback: try Bedrock model chain ---
+  // --- 1. Try Bedrock first (primary — paid account) ---
   const body = JSON.stringify({
     anthropic_version: 'bedrock-2023-05-31',
     max_tokens: maxTokens,
@@ -183,8 +180,23 @@ export async function invokeBedrockClaude(
     }
   }
 
+  // --- 2. Fallback: try Gemini if all Bedrock models failed ---
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const fullPrompt = systemPrompt
+        ? `${systemPrompt}\n\n${prompt}`
+        : prompt;
+      console.log('Bedrock exhausted, trying Gemini (fallback)');
+      const result = await callGemini(fullPrompt, { temperature, maxOutputTokens: maxTokens });
+      console.log('Success with Gemini fallback');
+      return result;
+    } catch (err: any) {
+      console.error('Gemini fallback also failed:', err.message);
+    }
+  }
+
   // All models failed — throw so handler catches and uses demo fallback
-  throw new Error('All AI models unavailable (Gemini + Bedrock) — demo fallback will be used');
+  throw new Error('All AI models unavailable (Bedrock + Gemini) — demo fallback will be used');
 }
 
 /** Strip ```json ... ``` wrappers that Gemini sometimes adds around JSON */
